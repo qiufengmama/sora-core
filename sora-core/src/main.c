@@ -2054,8 +2054,8 @@ double calc_distance(unsigned char image_label_a[Y_SIZE][X_SIZE],
 
 	unsigned char space_a[ey][ex];
 	unsigned char space_b[ey][ex];
-	shift_centre(image_label_a, image_buf_a, label_a, centre_ax, centre_ay);
-	shift_centre(image_label_b, image_buf_b, label_b, centre_bx, centre_by);
+	shift_centre(image_label_a, space_a, label_a, centre_ax, centre_ay);
+	shift_centre(image_label_b, space_b, label_b, centre_bx, centre_by);
 	//CENTRE POINT SHIFT END
 	//LOOP MATRIX CONTENT
 	int	i, j;
