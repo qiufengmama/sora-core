@@ -1958,7 +1958,8 @@ double calc_size(unsigned char image_label[Y_SIZE][X_SIZE],
 {
 	int		i, j;
 	double	tx, ty, total;
-
+//
+//
 	tx = 0; ty = 0; total = 0;
 	for (i = 0; i < Y_SIZE; i++)
 		for (j = 0; j < X_SIZE; j++)
