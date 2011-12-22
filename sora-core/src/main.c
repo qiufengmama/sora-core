@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
 	//LISTING DEFAULT
 	int threshold_rgb = 50;
 	int threshold_ysh = 50;
-	double threshold_ff = 0.6; // *100
+	double threshold_ff = 0.3; // *100
 	int lim = (Y_SIZE+X_SIZE)/2;
 	int a = 0;
 	int b = 128;
@@ -1721,7 +1721,7 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 				centre_ax[a], centre_ay[a], centre_bx[b], centre_by[b], label_a[a], label_b[b]);
 			//printf("\nCURRENT DISTANCE VALUE=> %f FROM %dA, %dB\n", d[a][b], a,b);
 			//l[a][b] = abs(size_b[b]-size_a[a]);
-			m=sprintf(&buf[posi], ">DISTANCE:%f; => %f;<\n",b, d[a][b]);posi += m;
+			m=sprintf(&buf[posi], ">DISTANCE:%d; => %f;<\n",b, d[a][b]);posi += m;
 		}
 
 		//END Ax[DATA] => Ax $$ Bx
@@ -1762,13 +1762,14 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 
 					//printf("STDDEV A&B %d =>%f AVG => %f HIGH => %f LOW => %f\n", a, stddev[a], avg[a], d[a][0],d[a][cnt_b-1]);
 					if(
-							((d[a][0]-d[a][0+1]) <= threshold_ff)
-
+							((d[a][0]) >= threshold_ff)
+							/*
 							||
 							((dl[a][0]-dl[a][0+1]) <= threshold_ff)
 
 							||
 							((dr[a][0]-dr[a][0+1]) <= threshold_ff)
+							*/
 					)
 					{
 						//printf("PEAK!\n");
@@ -1794,21 +1795,21 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 						if((d[a][0] + d[a][cnt_b])/2 > d[a][((int)round(cnt_b/2))])
 						{
 							//VALUE DOES NOT VARY
-							printf("\nSTDDEV LOGIC STAT [CURVE]=> :%f \n", d_stddev);
-							printf("\nSTDDEV LOGIC STAT [CURVE]=> :%f \n", dl_stddev);
-							printf("\nSTDDEV LOGIC STAT [CURVE]=> :%f \n", dr_stddev);
+							//printf("\nSTDDEV LOGIC STAT [CURVE]=> :%f \n", d_stddev);
+							//printf("\nSTDDEV LOGIC STAT [CURVE]=> :%f \n", dl_stddev);
+							//printf("\nSTDDEV LOGIC STAT [CURVE]=> :%f \n", dr_stddev);
 						}
 						else if((d[a][0] + d[a][cnt_b])/2 < d[a][((int)round(cnt_b/2))])
 						{
 							d_stddev = 1-d_stddev;
 							dl_stddev = 1-dl_stddev;
 							dr_stddev = 1-dr_stddev;
-							printf("\nSTDDEV LOGIC STAT [!CURVE]=> :%f \n", d_stddev);
-							printf("\nSTDDEV LOGIC STAT [!CURVE]=> :%f \n", dl_stddev);
-							printf("\nSTDDEV LOGIC STAT [!CURVE]=> :%f \n", dr_stddev);
+							//printf("\nSTDDEV LOGIC STAT [!CURVE]=> :%f \n", d_stddev);
+							//printf("\nSTDDEV LOGIC STAT [!CURVE]=> :%f \n", dl_stddev);
+							//printf("\nSTDDEV LOGIC STAT [!CURVE]=> :%f \n", dr_stddev);
 						}
 
-						cnt_data = cnt_data + (d_stddev+dl_stddev+dr_stddev);
+						//cnt_data = cnt_data + (d_stddev+dl_stddev+dr_stddev);
 
 						//printf("MAKING LABEL PROG  %d=> %d\n",cnt_data , label[cnt_data]);
 						m=sprintf(&buf[posi], ">PEAK SECTION => %d\n", a);posi += m;
@@ -1817,6 +1818,56 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 						//IF CNT = ORIGINAL CNT; THEN => MATRIX A = MATRIX B
 						//IF CNT < ORIGINAL CNT *BY VALUE*; THEN => MATRIX A < MATRIX B BY *VALUE*
 						//IF CNT = 0; THEN => MATRIX A != MATRIX B
+					}
+					else
+					{
+					   //printf("PEAK!\n");
+						cnt_data++;//GET PEAK DATA; MARK AS FOUND....
+						cnt_label++;//LABEL PEAK SEGMENT
+						label[cnt_label] = (a+L_BASE);//LABEL
+						m=sprintf(&buf[posi], ">PEAK DATA LOGIC => %f\n", (d[a][0]-d[a][0+1]));posi += m;
+						m=sprintf(&buf[posi], ">PEAK DATA LENGTH=> %f\n", (dl[a][0]-dl[a][0+1]));posi += m;
+						m=sprintf(&buf[posi], ">PEAK DATA RATIO => %f\n", (dr[a][0]-dr[a][0+1]));posi += m;
+						double d_dif[cnt_b];
+						double dl_dif[cnt_b];
+						double dr_dif[cnt_b];
+
+						for(i = 0; i < cnt_b-1; i++)
+						{
+							d_dif[i] =d[a][i]-d[i][i+1];
+							dl_dif[i] = dl[a][i]-dl[i][i+1];
+							dr_dif[i] = dr[a][i]-dr[i][i+1];
+						}
+						double d_stddev = stat_stddev(d_dif, cnt_b-1);
+						double dl_stddev = stat_stddev(dl_dif, cnt_b-1);
+						double dr_stddev = stat_stddev(dr_dif, cnt_b-1);
+						if((d[a][0] + d[a][cnt_b])/2 > d[a][((int)round(cnt_b/2))])
+						{
+							//VALUE DOES NOT VARY
+							//printf("\nSTDDEV LOGIC STAT [CURVE]=> :%f \n", d_stddev);
+							//printf("\nSTDDEV LOGIC STAT [CURVE]=> :%f \n", dl_stddev);
+							//printf("\nSTDDEV LOGIC STAT [CURVE]=> :%f \n", dr_stddev);
+						}
+						else if((d[a][0] + d[a][cnt_b])/2 < d[a][((int)round(cnt_b/2))])
+						{
+							d_stddev = 1-d_stddev;
+							dl_stddev = 1-dl_stddev;
+							dr_stddev = 1-dr_stddev;
+							//printf("\nSTDDEV LOGIC STAT [!CURVE]=> :%f \n", d_stddev);
+							//printf("\nSTDDEV LOGIC STAT [!CURVE]=> :%f \n", dl_stddev);
+							//printf("\nSTDDEV LOGIC STAT [!CURVE]=> :%f \n", dr_stddev);
+						}
+
+						cnt_data =  (d_stddev+dl_stddev+dr_stddev);
+
+						//printf("MAKING LABEL PROG  %d=> %d\n",cnt_data , label[cnt_data]);
+						m=sprintf(&buf[posi], ">PEAK SECTION => %d\n", a);posi += m;
+						//CHECK IF ONE LABEL THRESHOLD HAS LARGER VALUE THAN OTHERS IN RESULT(PEAK TARGET DATA):3
+						//IF UNDETECTED(GARBAGE DATA), MAIN CNT DECREMENT; BEFORE END, CHECK CNT VALUE,
+						//IF CNT = ORIGINAL CNT; THEN => MATRIX A = MATRIX B
+						//IF CNT < ORIGINAL CNT *BY VALUE*; THEN => MATRIX A < MATRIX B BY *VALUE*
+						//IF CNT = 0; THEN => MATRIX A != MATRIX B
+
 					}
 
 					//HERE, LOOP THROUGH THR CNT MATRIX; SORT THRESHOLD DATA
