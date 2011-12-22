@@ -73,8 +73,7 @@ int main(int argc, char *argv[]) {
 	char *path_thr_b = join(join(join(CORE_CODE_NAME, "_THR_B_"), tochar(TIME)), ".bmp");
 
 	int debug = 1;
-	char *debug_a = "ko.bmp";
-	char *debug_b = "ko.bmp";
+
 	//DEBUG ONLY END
 
 /*
@@ -1590,9 +1589,6 @@ void labelset(unsigned char	image[Y_SIZE][X_SIZE], int xs, int ys, int label)
 
 
 
-
-
-
 /*--- features -------------------------------*/
 void features(unsigned char	image_label_in[Y_SIZE][X_SIZE],
 	unsigned char image_label_out[Y_SIZE][X_SIZE],
@@ -2035,23 +2031,25 @@ double calc_distance(unsigned char image_label_a[Y_SIZE][X_SIZE],
 	int shift_bx, shift_by;
 	//int aa,bb;
 	//MIDPOINT = [X_SIZE/2][Y_SIZE/2]
-	shift_ax = ((X_SIZE) - centre_ax);
-	shift_ay = ((Y_SIZE) - centre_ay);
-	shift_bx = ((X_SIZE) - centre_bx);
-	shift_by = ((Y_SIZE) - centre_by);
+	//SHIFT A TO B
+	shift_ax = ((centre_bx) - centre_ax);
+	shift_ay = ((centre_by) - centre_ay);
+	//SHIFT B TO A
+	shift_bx = ((centre_ax) - centre_bx);
+	shift_by = ((centre_ay) - centre_by);
 	//printf("\n=>SHIFT XY => !");
 	//printf("!LB => %d A(X, Y) => A(%d, %d)", label_a, centre_ax, centre_ay);
 	//printf("!LB => %d B(X, Y) => B(%d, %d)<=",label_b, centre_bx, centre_by);
 	int ex = X_SIZE*2;
 	int ey = Y_SIZE*2;
 
-	unsigned char space_a[ey][ex];
-	unsigned char space_b[ey][ex];
+	//unsigned char space_a[ey][ex];
+	//unsigned char space_b[ey][ex];
 	//int id_a = &label_a;
 	//int id_b = &label_b;
-	shift_centre(image_label_a, space_a, &label_a, &centre_ax, &centre_ay);
+	//shift_centre(image_label_a, space_a, &label_a, &centre_ax, &centre_ay);
 
-	shift_centre(image_label_b, space_b, &label_b, &centre_bx, &centre_by);
+	//shift_centre(image_label_b, space_b, &label_b, &centre_bx, &centre_by);
 
 
 	int	i, j;
@@ -2060,6 +2058,7 @@ double calc_distance(unsigned char image_label_a[Y_SIZE][X_SIZE],
 
 	//int shift_x = ((X_SIZE) - centre_ax);
 	//int shift_y = ((Y_SIZE) - *y);
+	/*
 		for (i = 0; i < ey; i++)
 			{
 				for (j = 0; j < ex; j++)
@@ -2074,19 +2073,28 @@ double calc_distance(unsigned char image_label_a[Y_SIZE][X_SIZE],
 					//MOVE BY SHIFT X & Y MATRIX
 				}
 			}
-
+*/
 
 
 	//CENTRE POINT SHIFT END
 	//LOOP MATRIX CONTENT
 
-	for (i = 0; i < ey; i++)
+	for (i = 0; i < Y_SIZE; i++)
 	{
-		for (j = 0; j < ex; j++)
+		for (j = 0; j < X_SIZE; j++)
 		{
 			//MATRIX SHIFT
-
-
+			if(
+					//A REMAINS STILL
+					image_label_a[i][j] == (label_a+L_BASE) &&
+					//SHIFT B TO A
+					image_label_b[i+shift_by][j+shift_bx] == (label_b+L_BASE)
+			)
+			{
+			//INCREMENTAL
+			total++;
+			}
+				/*
 			//AND OPERATOR
 			if ((space_a[i][j] == (label_a+L_BASE)) && (space_b[i][j] == (label_b+L_BASE)))
 			{
@@ -2102,6 +2110,7 @@ double calc_distance(unsigned char image_label_a[Y_SIZE][X_SIZE],
 			}
 			//TODO ADD OTHER FUNCTIONS....
 			//
+				 */
 
 
 			//
@@ -2131,23 +2140,13 @@ double calc_distance(unsigned char image_label_a[Y_SIZE][X_SIZE],
 	total = 0;
 	//i/(a+b-i)/
 }
-void shift_centre(unsigned char image_in[Y_SIZE][X_SIZE],
-	unsigned char image_out[Y_SIZE*2][X_SIZE*2],
-	int *label, int *x, int *y)
+
+
+
+double features_moment(unsigned char image_in[Y_SIZE][X_SIZE], int label)
 {
 	int i, j;
-
-
-	i= 0;j=0;label = 0;
-}
-long features_moment(unsigned char image_in[Y_SIZE][X_SIZE], int label, int x_shift, int y_shift)
-{
-	int i, j;
-	long moment = 0;
-
-	if((x_shift != 0) && (y_shift != 0))
-	i = i+x_shift; j = j+y_shift;//SET CENTRE
-
+	double moment = 0;
 	for (i = 0; i < Y_SIZE; i++)
 		{
 			for (j = 0; j < X_SIZE; j++)
@@ -2186,6 +2185,8 @@ void features_structure(unsigned char label_in[Y_SIZE][X_SIZE], double distance[
 
 					//TODO DISTANCE FORMULA HERE....
 					//TODO AND STRUCTURE STUFF....BLA BLA BLA
+					//TODO CHECK K-MEANS.....
+					//TODO GOOGLE STUFF ABOUT IMAGE IDENTIFICATION
 
 				}
 
