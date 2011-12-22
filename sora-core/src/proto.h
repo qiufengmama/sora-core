@@ -1,9 +1,13 @@
-//FFT decl
+//DECL
+
 //SORA CORE DECL
 
-
+//STANDARD CONSTANT
 int X_SIZE = 256;
 int Y_SIZE = 256;
+//DEBUG CONSTANT
+char *debug_a = "ko.bmp";
+char *debug_b = "ko.bmp";
 
 
 //STANDARD FUNCTION
@@ -119,8 +123,8 @@ double calc_distance(unsigned char image_label_a[Y_SIZE][X_SIZE],
 	unsigned char image_buf_a[Y_SIZE][X_SIZE],
 	unsigned char image_buf_b[Y_SIZE][X_SIZE],
 	int size_a, int size_b,
-	int centre_ax, int centre_ay,
-	int centre_bx, int centre_by,
+	int centre_ax,  int centre_ay,
+	int centre_bx,  int centre_by,
 	int label_a, int label_b);
 
 void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
@@ -129,7 +133,8 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 	unsigned char image_label_out_b[Y_SIZE][X_SIZE],
 	int cnt_a, int cnt_b, double size[], double length[],
 	double ratio[],char *buf, double *rslt, int label[], int *cc, double threshold_ff);
-void shift_centre(unsigned char image_in[Y_SIZE][X_SIZE], unsigned char image_out[Y_SIZE][X_SIZE], int label, int x, int y);
+
+
 double calc_size(unsigned char image_label[Y_SIZE][X_SIZE], int label, int *cx, int *cy);
 double calc_equalize(unsigned char image_label[Y_SIZE][X_SIZE], int label, int *cx, int *cy);
 double calc_length(unsigned char image_label[Y_SIZE][X_SIZE], int label);
@@ -144,7 +149,7 @@ void features(unsigned char	image_label_in[Y_SIZE][X_SIZE],
 	unsigned char image_label_out[Y_SIZE][X_SIZE],
 	int cnt, double size[], double length[], double ratio[], char *buf);
 // FEATURES COMPARE HERE...
-long features_moment(unsigned char image_in[Y_SIZE][X_SIZE], int label, int x_shift, int y_shift);
+double features_moment(unsigned char image_in[Y_SIZE][X_SIZE], int label);
 void masking(unsigned char image_int[Y_SIZE][X_SIZE],
 	unsigned char image_outt[Y_SIZE][X_SIZE],
 	unsigned char image_maskt[Y_SIZE][X_SIZE]);
