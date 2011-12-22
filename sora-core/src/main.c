@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
 
 	int debug = 1;
 	char *debug_a = "ko.bmp";
-	char *debug_b = "miyako.bmp";
+	char *debug_b = "ko.bmp";
 	//DEBUG ONLY END
 
 /*
@@ -1633,8 +1633,8 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 	unsigned char image_buf_b[Y_SIZE][X_SIZE];
 	unsigned char image_buf_a[Y_SIZE][X_SIZE];
 	int	i, j;
-	int centre_ax, centre_ay;
-	int centre_bx, centre_by;
+	int centre_ax[cnt_a], centre_ay[cnt_a];
+	int centre_bx[cnt_b], centre_by[cnt_b];
 	int a, b;
 	//int am, aa;
 	//int bm, ba;
@@ -1653,6 +1653,8 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 
 	double cnt_data = 0;
 	int cnt_label = 0;
+	int label_a[cnt_a];
+	int label_b[cnt_b];
 	//float total_d;
 	int size_a[HIGH];
 	int size_b[HIGH];
@@ -1680,7 +1682,8 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 	//DIRECTION : A SEARCH IN B; sample*A => matrix[B]
 	for(a = 0; a < cnt_a; a++)
 	{
-		size_a[a] = calc_size(image_label_in_a, a+L_BASE, &centre_ax, &centre_ay);
+		label_a[a] = a;
+		size_a[a] = calc_size(image_label_in_a, a+L_BASE, &centre_ax[a], &centre_ay[a]);
 		length_a[a] = calc_length(image_label_in_a, a+L_BASE);
 		ratio_a[a] = 4*PI*size_a[a]/(length_a[a]*length_a[a]);
 
@@ -1688,8 +1691,9 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 		m=sprintf(&buf[posi], "%6d;|\n", size_a[a]);posi += m;
 		for(b = 0; b < cnt_b; b++)
 		{
+			label_b[b] = b;
 			//m=sprintf(&buf[posi], "SECTION B%d=>\n", b);posi += m;
-			size_b[b] = calc_size(image_label_in_b, b+L_BASE, &centre_bx, &centre_by);
+			size_b[b] = calc_size(image_label_in_b, b+L_BASE, &centre_bx[b], &centre_by[b]);
 			length_b[b] = calc_length(image_label_in_b, b+L_BASE);
 			ratio_b[b] = 4*PI*size_b[b]/(length_b[b]*length_b[b]);
 
@@ -1717,10 +1721,10 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 					image_buf_a,
 					image_buf_b,
 					size_a[a], size_b[b],
-				centre_ax, centre_ay, centre_bx, centre_by, a, b);
+				centre_ax[a], centre_ay[a], centre_bx[b], centre_by[b], label_a[a], label_b[b]);
 			//printf("\nCURRENT DISTANCE VALUE=> %f FROM %dA, %dB\n", d[a][b], a,b);
 			//l[a][b] = abs(size_b[b]-size_a[a]);
-			//m=sprintf(&buf[posi], ">DISTANCE:%d; => %d;<\n",b, d[a][b]);posi += m;
+			m=sprintf(&buf[posi], ">DISTANCE:%d; => %d;<\n",b, d[a][b]);posi += m;
 		}
 
 		//END Ax[DATA] => Ax $$ Bx
@@ -2023,29 +2027,18 @@ double calc_distance(unsigned char image_label_a[Y_SIZE][X_SIZE],
 	int centre_bx, int centre_by,
 	int label_a, int label_b)
 {
-	//LOOP MATRIX CONTENT
-	//int x,y;
-	//unsigned char image_buf_b[Y_SIZE][X_SIZE];
-	//unsigned char image_buf_a[Y_SIZE][X_SIZE];
-/*
-	for (x = 0; x < Y_SIZE; x++)
-		for (y = 0; y < X_SIZE; y++)
-		{
-			image_buf_a[y][x] = 0;
-			image_buf_b[y][x] = 0;
-		}
-*/
+
 
 	int total = 0;
 	//SHIFT MATRIX TO CENTRE
-	//int shift_ax, shift_ay;
-	//int shift_bx, shift_by;
+	int shift_ax, shift_ay;
+	int shift_bx, shift_by;
 	//int aa,bb;
 	//MIDPOINT = [X_SIZE/2][Y_SIZE/2]
-	//shift_ax = ((X_SIZE/2) - centre_ax);
-	//shift_ay = ((Y_SIZE/2) - centre_ay);
-	//shift_bx = ((X_SIZE/2) - centre_bx);
-	//shift_by = ((Y_SIZE/2) - centre_by);
+	shift_ax = ((X_SIZE) - centre_ax);
+	shift_ay = ((Y_SIZE) - centre_ay);
+	shift_bx = ((X_SIZE) - centre_bx);
+	shift_by = ((Y_SIZE) - centre_by);
 	//printf("\n=>SHIFT XY => !");
 	//printf("!LB => %d A(X, Y) => A(%d, %d)", label_a, centre_ax, centre_ay);
 	//printf("!LB => %d B(X, Y) => B(%d, %d)<=",label_b, centre_bx, centre_by);
@@ -2054,22 +2047,57 @@ double calc_distance(unsigned char image_label_a[Y_SIZE][X_SIZE],
 
 	unsigned char space_a[ey][ex];
 	unsigned char space_b[ey][ex];
-	shift_centre(image_label_a, space_a, label_a, centre_ax, centre_ay);
-	shift_centre(image_label_b, space_b, label_b, centre_bx, centre_by);
+	//int id_a = &label_a;
+	//int id_b = &label_b;
+	shift_centre(image_label_a, space_a, &label_a, &centre_ax, &centre_ay);
+
+	shift_centre(image_label_b, space_b, &label_b, &centre_bx, &centre_by);
+
+
+	int	i, j;
+
+
+
+	//int shift_x = ((X_SIZE) - centre_ax);
+	//int shift_y = ((Y_SIZE) - *y);
+		for (i = 0; i < ey; i++)
+			{
+				for (j = 0; j < ex; j++)
+				{
+					if(image_in[i][j] == (L_BASE+*label))
+					{
+						//if((i+shift_y < Y_SIZE) && (j+shift_x < X_SIZE))
+						image_out[i+shift_y][j+shift_x] = image_in[i][j];
+
+					}
+
+					//MOVE BY SHIFT X & Y MATRIX
+				}
+			}
+
+
+
 	//CENTRE POINT SHIFT END
 	//LOOP MATRIX CONTENT
-	int	i, j;
+
 	for (i = 0; i < ey; i++)
 	{
 		for (j = 0; j < ex; j++)
 		{
+			//MATRIX SHIFT
+
+
 			//AND OPERATOR
-			if ((image_buf_a[i][j] == (label_a+L_BASE)) && (image_buf_b[i][j] == (label_b+L_BASE)))
+			if ((space_a[i][j] == (label_a+L_BASE)) && (space_b[i][j] == (label_b+L_BASE)))
 			{
 				//INCREMENTAL
 				total++;
 				//AND OPERATOR MATRIX
 				//image_label_and[i][j] = HIGH;
+
+			}
+			else
+			{
 
 			}
 			//TODO ADD OTHER FUNCTIONS....
@@ -2086,39 +2114,31 @@ double calc_distance(unsigned char image_label_a[Y_SIZE][X_SIZE],
 	//write_bmp_mono(image_label_and, "kirino_intersect.bmp");
 	//write_bmp_mono(image_buf_a, "kirino_intersecta.bmp");
 	//write_bmp_mono(image_buf_b, "kirino_intersectb.bmp");
-	//printf("[]=>TOTAL AB => %d!",total);
-	//printf("!SIZE A => %d <=",size_a);
-	//printf("!SIZE B => %d <=\n",size_b);
+	printf("[]=>TOTAL AB => %d; ",total);
+	printf("SIZE A => %d; ",size_a);
+	printf("SIZE B => %d; ",size_b);
+	printf("LOGIC AB => %d/(%d + %d)-%d;",total, size_a, size_b, total);
+	printf("MATH AB => %d/%d; \n",total, ((size_a+size_b)-total));
 	//aa = 0;bb = 0;
 	//write_bmp_mono(image_label_and, "kirino_tmp.bmp");
 	//LOOP MATRIX CONTENT END
 
-	double rtn = (double)total/((double)size_a+(double)size_b-(double)total);
+	//MATH BUG HERE!
+	//IF SIZE A = SIZE B, THEN A+B-(A+B) = 0 => A+B /0 => UNDEFINED...
+	double rtn = (double)total/(((double)size_a+(double)size_b)-(double)total);
 	//printf("!RTN => %f!<=\n",rtn);
 	return rtn;
+	total = 0;
 	//i/(a+b-i)/
 }
 void shift_centre(unsigned char image_in[Y_SIZE][X_SIZE],
-	unsigned char image_out[Y_SIZE][X_SIZE],
-	int label, int x, int y)
+	unsigned char image_out[Y_SIZE*2][X_SIZE*2],
+	int *label, int *x, int *y)
 {
 	int i, j;
 
-	int shift_x = ((X_SIZE) - x);
-	int shift_y = ((Y_SIZE) - y);
-	for (i = 0; i < Y_SIZE*2; i++)
-		{
-			for (j = 0; j < X_SIZE*2; j++)
-			{
-				if(image_in[i][j] == (L_BASE+label))
-				{
-					//if((i+shift_y < Y_SIZE) && (j+shift_x < X_SIZE))
-					image_out[i+shift_y][j+shift_x] = image_in[i][j];
-				}
 
-				//MOVE BY SHIFT X & Y MATRIX
-			}
-		}
+	i= 0;j=0;label = 0;
 }
 long features_moment(unsigned char image_in[Y_SIZE][X_SIZE], int label, int x_shift, int y_shift)
 {
