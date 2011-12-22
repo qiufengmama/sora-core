@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
 	//LISTING DEFAULT
 	int threshold_rgb = 50;
 	int threshold_ysh = 50;
-	double threshold_ff = 0.5; // *100
+	double threshold_ff = 0.6; // *100
 	int lim = (Y_SIZE+X_SIZE)/2;
 	int a = 0;
 	int b = 128;
@@ -197,7 +197,7 @@ if(b >= (lim/2))
 
 	}
 	*/
-	//clock_t start_arr = clock();
+
 
 /*
  * DATA READ
@@ -1638,7 +1638,7 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 	double d[cnt_a][cnt_b];
 	double dr[cnt_a][cnt_b];
 	double dl[cnt_a][cnt_b];
-
+	/*
 	double stddev[cnt_a];
 	double stddev_r[cnt_a];
 	double stddev_l[cnt_a];
@@ -1646,6 +1646,7 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 	double avg[cnt_a];
 	double avg_r[cnt_a];
 	double avg_l[cnt_a];
+	*/
 
 	double cnt_data = 0;
 	int cnt_label = 0;
@@ -1720,7 +1721,7 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 				centre_ax[a], centre_ay[a], centre_bx[b], centre_by[b], label_a[a], label_b[b]);
 			//printf("\nCURRENT DISTANCE VALUE=> %f FROM %dA, %dB\n", d[a][b], a,b);
 			//l[a][b] = abs(size_b[b]-size_a[a]);
-			m=sprintf(&buf[posi], ">DISTANCE:%d; => %d;<\n",b, d[a][b]);posi += m;
+			m=sprintf(&buf[posi], ">DISTANCE:%f; => %f;<\n",b, d[a][b]);posi += m;
 		}
 
 		//END Ax[DATA] => Ax $$ Bx
@@ -1729,22 +1730,27 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 		qsort(d[a], cnt_b, sizeof(double), sort);
 		qsort(dr[a], cnt_b, sizeof(double), sort);
 		qsort(dl[a], cnt_b, sizeof(double), sort);
-/*
+
 		int z;
 		printf("CURRENT ARRAY VALUE=> {");
 		for(z = 0; z < cnt_b; z++)
 			printf("%f, ", d[a][z]);
-		//printf("}\n");
-*/
-		stddev[a] = stat_stddev(d[a], cnt_b);
-		stddev_r[a] = stat_stddev(dr[a], cnt_b);
-		stddev_l[a] = stat_stddev(dl[a], cnt_b);
-
-		avg[a] = stat_avg(d[a], cnt_b);
-		avg_r[a] = stat_avg(dr[a], cnt_b);
-		avg_l[a] = stat_avg(dl[a], cnt_b);
+		printf("}\n");
+		printf("CURRENT ARRAY VALUE=> {");
+		for(z = 0; z < cnt_b; z++)
+			printf("%f, ", dl[a][z]);
+		printf("}\n");
+		printf("CURRENT ARRAY VALUE=> {");
+		for(z = 0; z < cnt_b; z++)
+			printf("%f, ", dr[a][z]);
+		printf("}\n");
+		//stddev[a] = stat_stddev(d[a], cnt_b);
+		//stddev_r[a] = stat_stddev(dr[a], cnt_b);
+		//stddev_l[a] = stat_stddev(dl[a], cnt_b);
+		//avg[a] = stat_avg(d[a], cnt_b);
+		//avg_r[a] = stat_avg(dr[a], cnt_b);
+		//avg_l[a] = stat_avg(dl[a], cnt_b);
 		//printf("STDDEV A&B %d =>%f\n", a,stddev_l[a]);
-
 		//qsort(&l[a][b], cnt_b, sizeof(double), sort);
 					//for(bm = 0; bm < cnt_b; bm++)
 						//ba += d[a][bm];
@@ -1756,178 +1762,62 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 
 					//printf("STDDEV A&B %d =>%f AVG => %f HIGH => %f LOW => %f\n", a, stddev[a], avg[a], d[a][0],d[a][cnt_b-1]);
 					if(
-							/*
-							(
-									(((d[a][0] - d[a][1]) >= stddev[a]) &&
-									((d[a][0] - d[a][1]) > 0))
+							((d[a][0]-d[a][0+1]) <= threshold_ff)
 
-									||
-									(((dl[a][0] - dl[a][1]) >= stddev_l[a]) &&
-									((dl[a][0] - dl[a][1]) > 0))
+							||
+							((dl[a][0]-dl[a][0+1]) <= threshold_ff)
 
-									||
-									(((dr[a][0] - dr[a][1]) >= stddev_r[a]) &&
-									((dr[a][0] - dr[a][1]) > 0))
-							)
-
-							&&
-							*/
-							/*
-							(
-									((d[a][0] - avg[a]) > stddev[a])
-									||
-									((dl[a][0] - avg_l[a]) > stddev_l[a])
-									||
-									((dr[a][0] - avg_r[a]) > stddev_r[a])
-							)
-							*/
-
-							((d[a][0]-d[a][0-1]) <= threshold_ff)
-
-							&&
-							((dl[a][0]-dl[a][0-1]) <= threshold_ff)
-
-							&&
-							((dr[a][0]-dr[a][0-1]) <= threshold_ff)
-
-
+							||
+							((dr[a][0]-dr[a][0+1]) <= threshold_ff)
 					)
 					{
 						//printf("PEAK!\n");
-						m=sprintf(&buf[posi], ">PEAK DATA => %f\n", (d[a][0]-d[a][cnt_b-1]));posi += m;
+						cnt_data++;//GET PEAK DATA; MARK AS FOUND....
+						cnt_label++;//LABEL PEAK SEGMENT
+						label[cnt_label] = (a+L_BASE);//LABEL
+						m=sprintf(&buf[posi], ">PEAK DATA LOGIC => %f\n", (d[a][0]-d[a][0+1]));posi += m;
+						m=sprintf(&buf[posi], ">PEAK DATA LENGTH=> %f\n", (dl[a][0]-dl[a][0+1]));posi += m;
+						m=sprintf(&buf[posi], ">PEAK DATA RATIO => %f\n", (dr[a][0]-dr[a][0+1]));posi += m;
+						double d_dif[cnt_b];
+						double dl_dif[cnt_b];
+						double dr_dif[cnt_b];
 
-
-						/*
-						double cluster_value = 0;
-
-						double cluster_avg = 0;
-						double cluster_avg_l = 0;
-						double cluster_avg_r = 0;
-
-
-						double total_c = (double)cnt_b;
-
-						int cpst_c = 0;
-						int cpst_c_l = 0;
-						int cpst_c_r = 0;
-
-						double cpst_l[cnt_b];
-						double cpst_l_l[cnt_b];
-						double cpst_l_r[cnt_b];
-
-						int compensate = 0;
-						double cpst = 0;
 						for(i = 0; i < cnt_b-1; i++)
 						{
-							if((d[a][i]-d[i][i+1]) > stddev[a])
-							{
-								cpst_l[cpst_c] = i;
-								cpst_c++;
-								compensate++;
-							}
-							if((dl[a][i]-dl[i][i+1]) > stddev_l[a])
-							{
-								cpst_l_l[cpst_c_l] = i;
-								cpst_c_l++;
-								//compensate++;
-							}
-							if((dr[a][i]-dr[i][i+1]) > stddev_r[a])
-							{
-								cpst_l_r[cpst_c_r] = i;
-								cpst_c_r++;
-								//compensate++;
-							}
-
+							d_dif[i] =d[a][i]-d[i][i+1];
+							dl_dif[i] = dl[a][i]-dl[i][i+1];
+							dr_dif[i] = dr[a][i]-dr[i][i+1];
+						}
+						double d_stddev = stat_stddev(d_dif, cnt_b-1);
+						double dl_stddev = stat_stddev(dl_dif, cnt_b-1);
+						double dr_stddev = stat_stddev(dr_dif, cnt_b-1);
+						if((d[a][0] + d[a][cnt_b])/2 > d[a][((int)round(cnt_b/2))])
+						{
+							//VALUE DOES NOT VARY
+							printf("\nSTDDEV LOGIC STAT [CURVE]=> :%f \n", d_stddev);
+							printf("\nSTDDEV LOGIC STAT [CURVE]=> :%f \n", dl_stddev);
+							printf("\nSTDDEV LOGIC STAT [CURVE]=> :%f \n", dr_stddev);
+						}
+						else if((d[a][0] + d[a][cnt_b])/2 < d[a][((int)round(cnt_b/2))])
+						{
+							d_stddev = 1-d_stddev;
+							dl_stddev = 1-dl_stddev;
+							dr_stddev = 1-dr_stddev;
+							printf("\nSTDDEV LOGIC STAT [!CURVE]=> :%f \n", d_stddev);
+							printf("\nSTDDEV LOGIC STAT [!CURVE]=> :%f \n", dl_stddev);
+							printf("\nSTDDEV LOGIC STAT [!CURVE]=> :%f \n", dr_stddev);
 						}
 
+						cnt_data = cnt_data + (d_stddev+dl_stddev+dr_stddev);
 
-						cluster_avg = stat_avg(cpst_l, cpst_c);
-						cluster_avg_l = stat_avg(cpst_l, cpst_c_l);
-						cluster_avg_r = stat_avg(cpst_l, cpst_c_r);
-						//for(i = 0; i < cpst_c; i++)
-							//if(cpst_l[cpst_c] < ceil((cnt_b*threshold_ff)))
-						//CALC STAT AVG
-						cluster_value = (((total_c - cluster_avg)/total_c)+
-								((total_c - cluster_avg_l)/total_c)+
-								((total_c - cluster_avg_r)/total_c))/3;
-						//DEFINE STAT VALUE
-
-
-						cpst = (double)(compensate)/(double)cnt_b;
-						//DEFINE MAIN CNT VALUE, HIGHER = CLOSER
-
-						cnt_data = cnt_data + ((double)cluster_value);
-						printf("Compensate CNT :%f\n", cluster_value);
-						//printf("Cluster value:%f\n", cluster_value);
-
-
-
-						*/
-
-						cnt_data++;//GET PEAK DATA; MARK AS FOUND....
-						cnt_label++;
-						label[cnt_label] = (a+L_BASE);
 						//printf("MAKING LABEL PROG  %d=> %d\n",cnt_data , label[cnt_data]);
-
 						m=sprintf(&buf[posi], ">PEAK SECTION => %d\n", a);posi += m;
-
 						//CHECK IF ONE LABEL THRESHOLD HAS LARGER VALUE THAN OTHERS IN RESULT(PEAK TARGET DATA):3
 						//IF UNDETECTED(GARBAGE DATA), MAIN CNT DECREMENT; BEFORE END, CHECK CNT VALUE,
 						//IF CNT = ORIGINAL CNT; THEN => MATRIX A = MATRIX B
 						//IF CNT < ORIGINAL CNT *BY VALUE*; THEN => MATRIX A < MATRIX B BY *VALUE*
 						//IF CNT = 0; THEN => MATRIX A != MATRIX B
 					}
-
-					else /*if(
-
-							(
-									(((d[a][0] - d[a][1]) < stddev[a]) &&
-									((d[a][0] - d[a][1]) > 0))
-									||
-									(((dl[a][0] - dl[a][1]) < stddev_l[a]) &&
-									((dl[a][0] - dl[a][1]) > 0))
-
-									||
-									(((dr[a][0] - dr[a][1]) < stddev_r[a]) &&
-									((dr[a][0] - dr[a][1]) > 0))
-							)
-
-							) */
-					{
-						/*
-						double cluster_value = 0;
-						double cluster_avg = 0;
-						double total_c = (double)cnt_b;
-						int cpst_c = 0;
-						double cpst_l[cnt_b];
-						int compensate = 0;
-						double cpst = 0;
-						for(i= 0; i < cnt_b-1; i++)
-						{
-							if((d[a][i]-d[i][i+1]) > stddev[a])
-							{
-
-								cpst_l[cpst_c] = i;
-								cpst_c++;
-								//IDEAL !(i-(i-1))
-								//BAD DATA !(i)
-								compensate++;
-							}
-						}
-
-						cluster_avg = stat_avg(cpst_l, cpst_c);
-						cluster_value = (total_c - cluster_avg)/(double)cnt_b;
-						cpst = (double)(cnt_b - compensate)/(double)cnt_b;
-						cnt_data = cnt_data + ((double)cpst*(double)cluster_value);
-						printf("Compensate:%f\n", cpst);
-						printf("Cluster value:%f\n", cluster_value);
-						//HIGHER CNT = BETTER RESULT
-						//LOWER CNT = LOWER ACCURACY
-
-						 */
-					}
-
-					//*cc++;
 
 					//HERE, LOOP THROUGH THR CNT MATRIX; SORT THRESHOLD DATA
 					//CALCULATE DIFFERENCE BETWEEN ARRAY DAT A AND FIND UNIQUE VALUE(PEAK TARGET DATA):3
@@ -2023,14 +1913,10 @@ double calc_distance(unsigned char image_label_a[Y_SIZE][X_SIZE],
 	int centre_bx, int centre_by,
 	int label_a, int label_b)
 {
-
-
 	int total = 0;
 	//SHIFT MATRIX TO CENTRE
 	int shift_ax, shift_ay;
 	int shift_bx, shift_by;
-	//int aa,bb;
-	//MIDPOINT = [X_SIZE/2][Y_SIZE/2]
 	//SHIFT A TO B
 	shift_ax = ((centre_bx) - centre_ax);
 	shift_ay = ((centre_by) - centre_ay);
@@ -2040,42 +1926,8 @@ double calc_distance(unsigned char image_label_a[Y_SIZE][X_SIZE],
 	//printf("\n=>SHIFT XY => !");
 	//printf("!LB => %d A(X, Y) => A(%d, %d)", label_a, centre_ax, centre_ay);
 	//printf("!LB => %d B(X, Y) => B(%d, %d)<=",label_b, centre_bx, centre_by);
-	int ex = X_SIZE*2;
-	int ey = Y_SIZE*2;
-
-	//unsigned char space_a[ey][ex];
-	//unsigned char space_b[ey][ex];
-	//int id_a = &label_a;
-	//int id_b = &label_b;
-	//shift_centre(image_label_a, space_a, &label_a, &centre_ax, &centre_ay);
-
-	//shift_centre(image_label_b, space_b, &label_b, &centre_bx, &centre_by);
-
 
 	int	i, j;
-
-
-
-	//int shift_x = ((X_SIZE) - centre_ax);
-	//int shift_y = ((Y_SIZE) - *y);
-	/*
-		for (i = 0; i < ey; i++)
-			{
-				for (j = 0; j < ex; j++)
-				{
-					if(image_in[i][j] == (L_BASE+*label))
-					{
-						//if((i+shift_y < Y_SIZE) && (j+shift_x < X_SIZE))
-						image_out[i+shift_y][j+shift_x] = image_in[i][j];
-
-					}
-
-					//MOVE BY SHIFT X & Y MATRIX
-				}
-			}
-*/
-
-
 	//CENTRE POINT SHIFT END
 	//LOOP MATRIX CONTENT
 
@@ -2094,30 +1946,8 @@ double calc_distance(unsigned char image_label_a[Y_SIZE][X_SIZE],
 			//INCREMENTAL
 			total++;
 			}
-				/*
-			//AND OPERATOR
-			if ((space_a[i][j] == (label_a+L_BASE)) && (space_b[i][j] == (label_b+L_BASE)))
-			{
-				//INCREMENTAL
-				total++;
-				//AND OPERATOR MATRIX
-				//image_label_and[i][j] = HIGH;
 
-			}
-			else
-			{
-
-			}
 			//TODO ADD OTHER FUNCTIONS....
-			//
-				 */
-
-
-			//
-			//if(image_buf_a[i][j] == label_a)
-				//aa++;
-			//if(image_buf_b[i][j] == label_b)
-				//bb++;
 		}
 	}
 	//write_bmp_mono(image_label_and, "kirino_intersect.bmp");
@@ -2128,17 +1958,11 @@ double calc_distance(unsigned char image_label_a[Y_SIZE][X_SIZE],
 	printf("SIZE B => %d; ",size_b);
 	printf("LOGIC AB => %d/(%d + %d)-%d;",total, size_a, size_b, total);
 	printf("MATH AB => %d/%d; \n",total, ((size_a+size_b)-total));
-	//aa = 0;bb = 0;
-	//write_bmp_mono(image_label_and, "kirino_tmp.bmp");
 	//LOOP MATRIX CONTENT END
-
-	//MATH BUG HERE!
-	//IF SIZE A = SIZE B, THEN A+B-(A+B) = 0 => A+B /0 => UNDEFINED...
 	double rtn = (double)total/(((double)size_a+(double)size_b)-(double)total);
-	//printf("!RTN => %f!<=\n",rtn);
+
 	return rtn;
-	total = 0;
-	//i/(a+b-i)/
+
 }
 
 
