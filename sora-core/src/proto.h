@@ -6,8 +6,8 @@
 int X_SIZE = 256;
 int Y_SIZE = 256;
 //DEBUG CONSTANT
-char *debug_a = "ko.bmp";
-char *debug_b = "ko.bmp";
+char *debug_a = "uxa.bmp";
+char *debug_b = "ux1.bmp";
 
 
 //STANDARD FUNCTION
