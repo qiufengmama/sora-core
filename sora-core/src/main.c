@@ -334,7 +334,8 @@ features(image_label[1], image_feature[1], cnt_b, size_b, length_b, ratio_b, tex
 double rslt;
 int label[HIGH];
 
-features_compare(image_ffl[0],
+features_compare(
+	image_ffl[0],
 	image_ffl[1],
 	image_label_out_a,
 	image_label_out_b,
@@ -346,7 +347,7 @@ label_masking(image_label[0], image_marker, label, cc); // ->
 //printf("\nCC=>\n%s\n<=CC\n", buf_f);
 //double *crt_rtn = &rslt;
 //printf("=>LAB: %d \n", &label);
-printf("%f;\n", rslt);
+printf("%f;", rslt);
 
 
 if(debug  == 1)
@@ -571,54 +572,6 @@ write_bmp_color(image_out, path_fft_x);
 }
 
 
-/*
-//new blank end
-	int arr_i;
-	int abi;
-	int ax; //y
-	int bx; //x
-
-	for(arr_i = 0;arr_i <= 2; arr_i++){
-		//printf("ARRAY %d  (", arr_i);
-	for(ax = 0; ax <= lim-1;ax++){
-		for(bx = 0;bx <= lim-1;bx++){
-			//if(image_test[abi][arr_i][ax][bx] != 0)
-				printf("%d,", image_main[arr_i][ax][bx]);
-			//puts(image_test[abi][arr_i][ax][bx]);
-		}
-	}
-	//printf(");");
-	printf("|\n");
-	}
-*/
-	/*
-	 	int arr_i;
-	int abi;
-	int ax; //y
-	int bx; //x
-	for(abi = 0; abi <= 1; abi++){
-		//printf("BITMAP %d  {", abi);
-	for(arr_i = 0;arr_i <= 2; arr_i++){
-		//printf("ARRAY %d  (", arr_i);
-	for(ax = 0; ax <= lim-1;ax++){
-		for(bx = 0;bx <= lim-1;bx++){
-			//if(image_test[abi][arr_i][ax][bx] != 0)
-				printf("%d,", image_test[abi][arr_i][ax][bx]);
-			//puts(image_test[abi][arr_i][ax][bx]);
-		}
-	}
-	//printf(");");
-	printf("|");
-	}
-	//printf("};\n");
-	printf("#");
-	}
-	 */
-
-	////
-	//IPP
-	//system("pause");
-	//printf("ARR Time elapsed: %fs\n", ((double)clock() - start_arr) / CLOCKS_PER_SEC);
 	return EXIT_SUCCESS;
 }
 
@@ -1730,7 +1683,7 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 		qsort(d[a], cnt_b, sizeof(double), sort);
 		qsort(dr[a], cnt_b, sizeof(double), sort);
 		qsort(dl[a], cnt_b, sizeof(double), sort);
-
+		/*
 		int z;
 		printf("CURRENT ARRAY VALUE=> {");
 		for(z = 0; z < cnt_b; z++)
@@ -1744,6 +1697,7 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 		for(z = 0; z < cnt_b; z++)
 			printf("%f, ", dr[a][z]);
 		printf("}\n");
+		*/
 		//stddev[a] = stat_stddev(d[a], cnt_b);
 		//stddev_r[a] = stat_stddev(dr[a], cnt_b);
 		//stddev_l[a] = stat_stddev(dl[a], cnt_b);
@@ -1782,47 +1736,50 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 						double d_dif[cnt_b];
 						double dl_dif[cnt_b];
 						double dr_dif[cnt_b];
-
-						for(i = 0; i < cnt_b-1; i++)
+						if((cnt_b-1) > 1)
 						{
-							d_dif[i] =d[a][i]-d[i][i+1];
-							dl_dif[i] = dl[a][i]-dl[i][i+1];
-							dr_dif[i] = dr[a][i]-dr[i][i+1];
-						}
-						double d_stddev = stat_stddev(d_dif, cnt_b-1);
-						double dl_stddev = stat_stddev(dl_dif, cnt_b-1);
-						double dr_stddev = stat_stddev(dr_dif, cnt_b-1);
-						if((d[a][0] + d[a][cnt_b])/2 > d[a][((int)round(cnt_b/2))])
-						{
-							//VALUE DOES NOT VARY
-							//printf("\nSTDDEV LOGIC STAT [CURVE]=> :%f \n", d_stddev);
-							//printf("\nSTDDEV LOGIC STAT [CURVE]=> :%f \n", dl_stddev);
-							//printf("\nSTDDEV LOGIC STAT [CURVE]=> :%f \n", dr_stddev);
-						}
-						else if((d[a][0] + d[a][cnt_b])/2 < d[a][((int)round(cnt_b/2))])
-						{
-							d_stddev = 1-d_stddev;
-							dl_stddev = 1-dl_stddev;
-							dr_stddev = 1-dr_stddev;
-							//printf("\nSTDDEV LOGIC STAT [!CURVE]=> :%f \n", d_stddev);
-							//printf("\nSTDDEV LOGIC STAT [!CURVE]=> :%f \n", dl_stddev);
-							//printf("\nSTDDEV LOGIC STAT [!CURVE]=> :%f \n", dr_stddev);
-						}
+							for(i = 0; i < cnt_b-1; i++)
+							{
+								d_dif[i] =d[a][i]-d[a][i+1];
+								dl_dif[i] = dl[a][i]-dl[a][i+1];
+								dr_dif[i] = dr[a][i]-dr[a][i+1];
+							}
+							double d_stddev = stat_stddev(d_dif, cnt_b-1);
+							double dl_stddev = stat_stddev(dl_dif, cnt_b-1);
+							double dr_stddev = stat_stddev(dr_dif, cnt_b-1);
+							if((d[a][0] + d[a][cnt_b])/2 > d[a][((int)round(cnt_b/2))])
+							{
+								//VALUE DOES NOT VARY
+								//printf("\nSTDDEV LOGIC STAT [CURVE]=> :%f \n", d_stddev);
+								//printf("\nSTDDEV LOGIC STAT [CURVE]=> :%f \n", dl_stddev);
+								//printf("\nSTDDEV LOGIC STAT [CURVE]=> :%f \n", dr_stddev);
+							}
+							else if((d[a][0] + d[a][cnt_b])/2 < d[a][((int)round(cnt_b/2))])
+							{
+								d_stddev = 1-d_stddev;
+								dl_stddev = 1-dl_stddev;
+								dr_stddev = 1-dr_stddev;
+								//printf("\nSTDDEV LOGIC STAT [!CURVE]=> :%f \n", d_stddev);
+								//printf("\nSTDDEV LOGIC STAT [!CURVE]=> :%f \n", dl_stddev);
+								//printf("\nSTDDEV LOGIC STAT [!CURVE]=> :%f \n", dr_stddev);
+							}
 
-						//cnt_data = cnt_data + (d_stddev+dl_stddev+dr_stddev);
+							//cnt_data = cnt_data + (d_stddev+dl_stddev+dr_stddev);
 
-						//printf("MAKING LABEL PROG  %d=> %d\n",cnt_data , label[cnt_data]);
-						m=sprintf(&buf[posi], ">PEAK SECTION => %d\n", a);posi += m;
-						//CHECK IF ONE LABEL THRESHOLD HAS LARGER VALUE THAN OTHERS IN RESULT(PEAK TARGET DATA):3
-						//IF UNDETECTED(GARBAGE DATA), MAIN CNT DECREMENT; BEFORE END, CHECK CNT VALUE,
-						//IF CNT = ORIGINAL CNT; THEN => MATRIX A = MATRIX B
-						//IF CNT < ORIGINAL CNT *BY VALUE*; THEN => MATRIX A < MATRIX B BY *VALUE*
-						//IF CNT = 0; THEN => MATRIX A != MATRIX B
+							//printf("MAKING LABEL PROG  %d=> %d\n",cnt_data , label[cnt_data]);
+							m=sprintf(&buf[posi], ">PEAK SECTION => %d\n", a);posi += m;
+							//CHECK IF ONE LABEL THRESHOLD HAS LARGER VALUE THAN OTHERS IN RESULT(PEAK TARGET DATA):3
+							//IF UNDETECTED(GARBAGE DATA), MAIN CNT DECREMENT; BEFORE END, CHECK CNT VALUE,
+							//IF CNT = ORIGINAL CNT; THEN => MATRIX A = MATRIX B
+							//IF CNT < ORIGINAL CNT *BY VALUE*; THEN => MATRIX A < MATRIX B BY *VALUE*
+							//IF CNT = 0; THEN => MATRIX A != MATRIX B
+						}
 					}
 					else
 					{
 					   //printf("PEAK!\n");
 						cnt_data++;//GET PEAK DATA; MARK AS FOUND....
+						//TODO FIX CNT_B = 0 => NaN or inf BUG!
 						cnt_label++;//LABEL PEAK SEGMENT
 						label[cnt_label] = (a+L_BASE);//LABEL
 						m=sprintf(&buf[posi], ">PEAK DATA LOGIC => %f\n", (d[a][0]-d[a][0+1]));posi += m;
@@ -1831,53 +1788,62 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 						double d_dif[cnt_b];
 						double dl_dif[cnt_b];
 						double dr_dif[cnt_b];
-
-						for(i = 0; i < cnt_b-1; i++)
+						//double tmp = d[a][0]-d[a][cnt_b];
+						//printf("!%f!", tmp);
+						//printf("CNT COUNT B = %d, A = %d\n", cnt_b, cnt_a);
+						if((cnt_b-1) > 1)
 						{
-							d_dif[i] =d[a][i]-d[i][i+1];
-							dl_dif[i] = dl[a][i]-dl[i][i+1];
-							dr_dif[i] = dr[a][i]-dr[i][i+1];
-						}
-						double d_stddev = stat_stddev(d_dif, cnt_b-1);
-						double dl_stddev = stat_stddev(dl_dif, cnt_b-1);
-						double dr_stddev = stat_stddev(dr_dif, cnt_b-1);
-						if((d[a][0] + d[a][cnt_b])/2 > d[a][((int)round(cnt_b/2))])
-						{
-							//VALUE DOES NOT VARY
-							//printf("\nSTDDEV LOGIC STAT [CURVE]=> :%f \n", d_stddev);
-							//printf("\nSTDDEV LOGIC STAT [CURVE]=> :%f \n", dl_stddev);
-							//printf("\nSTDDEV LOGIC STAT [CURVE]=> :%f \n", dr_stddev);
-						}
-						else if((d[a][0] + d[a][cnt_b])/2 < d[a][((int)round(cnt_b/2))])
-						{
-							d_stddev = 1-d_stddev;
-							dl_stddev = 1-dl_stddev;
-							dr_stddev = 1-dr_stddev;
-							//printf("\nSTDDEV LOGIC STAT [!CURVE]=> :%f \n", d_stddev);
-							//printf("\nSTDDEV LOGIC STAT [!CURVE]=> :%f \n", dl_stddev);
-							//printf("\nSTDDEV LOGIC STAT [!CURVE]=> :%f \n", dr_stddev);
-						}
+							for(i = 0; i < cnt_b-1; i++)
+							{
+								d_dif[i] = d[a][i]-d[a][i+1];
+								dl_dif[i] = dl[a][i]-dl[a][i+1];
+								dr_dif[i] = dr[a][i]-dr[a][i+1];
+							}
+							//DEBUG
+							/*
+							int z;
+							printf("CURRENT STDDEV ARRAY VALUE=> {");
+							for(z = 0; z < cnt_b-1; z++)
+								printf("%f, ", d_dif[z]);
+							printf("}\n");
+							*/
+							//DEBUG
+							double d_stddev = stat_stddev(d_dif, cnt_b-1);
+							double dl_stddev = stat_stddev(dl_dif, cnt_b-1);
+							double dr_stddev = stat_stddev(dr_dif, cnt_b-1);
+							if((d[a][0] + d[a][cnt_b])/2 > d[a][((int)round(cnt_b/2))])
+							{
+								//VALUE DOES NOT VARY
+								//printf("\nSTDDEV LOGIC STAT [CURVE]=> :%f \n", d_stddev);
+								//printf("\nSTDDEV LOGIC STAT [CURVE]=> :%f \n", dl_stddev);
+								//printf("\nSTDDEV LOGIC STAT [CURVE]=> :%f \n", dr_stddev);
+							}
+							else if((d[a][0] + d[a][cnt_b])/2 < d[a][((int)round(cnt_b/2))])
+							{
+								d_stddev = 1-d_stddev;
+								dl_stddev = 1-dl_stddev;
+								dr_stddev = 1-dr_stddev;
+								//printf("\nSTDDEV LOGIC STAT [!CURVE]=> :%f \n", d_stddev);
+								//printf("\nSTDDEV LOGIC STAT [!CURVE]=> :%f \n", dl_stddev);
+								//printf("\nSTDDEV LOGIC STAT [!CURVE]=> :%f \n", dr_stddev);
+							}
 
-						cnt_data =  (d_stddev+dl_stddev+dr_stddev);
-
-						//printf("MAKING LABEL PROG  %d=> %d\n",cnt_data , label[cnt_data]);
-						m=sprintf(&buf[posi], ">PEAK SECTION => %d\n", a);posi += m;
-						//CHECK IF ONE LABEL THRESHOLD HAS LARGER VALUE THAN OTHERS IN RESULT(PEAK TARGET DATA):3
-						//IF UNDETECTED(GARBAGE DATA), MAIN CNT DECREMENT; BEFORE END, CHECK CNT VALUE,
-						//IF CNT = ORIGINAL CNT; THEN => MATRIX A = MATRIX B
-						//IF CNT < ORIGINAL CNT *BY VALUE*; THEN => MATRIX A < MATRIX B BY *VALUE*
-						//IF CNT = 0; THEN => MATRIX A != MATRIX B
-
+							cnt_data =  (d_stddev+dl_stddev+dr_stddev);
+							//printf("MAKING LABEL PROG  %d=> %d\n",cnt_data , label[cnt_data]);
+							m=sprintf(&buf[posi], ">PEAK SECTION => %d\n", a);posi += m;
+							//CHECK IF ONE LABEL THRESHOLD HAS LARGER VALUE THAN OTHERS IN RESULT(PEAK TARGET DATA):3
+							//IF UNDETECTED(GARBAGE DATA), MAIN CNT DECREMENT; BEFORE END, CHECK CNT VALUE,
+							//IF CNT = ORIGINAL CNT; THEN => MATRIX A = MATRIX B
+							//IF CNT < ORIGINAL CNT *BY VALUE*; THEN => MATRIX A < MATRIX B BY *VALUE*
+							//IF CNT = 0; THEN => MATRIX A != MATRIX B
+						}
 					}
-
 					//HERE, LOOP THROUGH THR CNT MATRIX; SORT THRESHOLD DATA
 					//CALCULATE DIFFERENCE BETWEEN ARRAY DAT A AND FIND UNIQUE VALUE(PEAK TARGET DATA):3
 					//ALG => FIND UNIQUE DATA(ONE)
 					//IF CNT
 					//(CNT A)
 					//image_label_out_a[center_y][center_x] = HIGH;
-
-
 	}
 
 	*rslt = (double)cnt_data/(double)cnt_a;
@@ -2004,11 +1970,13 @@ double calc_distance(unsigned char image_label_a[Y_SIZE][X_SIZE],
 	//write_bmp_mono(image_label_and, "kirino_intersect.bmp");
 	//write_bmp_mono(image_buf_a, "kirino_intersecta.bmp");
 	//write_bmp_mono(image_buf_b, "kirino_intersectb.bmp");
+	/*
 	printf("[]=>TOTAL AB => %d; ",total);
 	printf("SIZE A => %d; ",size_a);
 	printf("SIZE B => %d; ",size_b);
 	printf("LOGIC AB => %d/(%d + %d)-%d;",total, size_a, size_b, total);
 	printf("MATH AB => %d/%d; \n",total, ((size_a+size_b)-total));
+	*/
 	//LOOP MATRIX CONTENT END
 	double rtn = (double)total/(((double)size_a+(double)size_b)-(double)total);
 
@@ -2061,7 +2029,7 @@ void features_structure(unsigned char label_in[Y_SIZE][X_SIZE], double distance[
 					//TODO DISTANCE FORMULA HERE....
 					//TODO AND STRUCTURE STUFF....BLA BLA BLA
 					//TODO CHECK K-MEANS.....
-					//TODO GOOGLE STUFF ABOUT IMAGE IDENTIFICATION
+					//TODO GOOGLE STUFF ABOUT IMAGE IDENTIFICATION BLA BLA BLA
 
 				}
 
