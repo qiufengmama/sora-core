@@ -27,6 +27,7 @@
 int main(int argc, char *argv[]) {
 
 	//YSH NEED TO BE INT
+
 	int image_main_ysh[2][3][Y_SIZE][X_SIZE];
 	unsigned char image_main[2][3][Y_SIZE][X_SIZE];
 	unsigned char image_main_ybuf[2][3][Y_SIZE][X_SIZE];
@@ -262,6 +263,13 @@ if(c != NULL)
 		ci = 0;
 		ii = 0;
 }
+free(btn);
+free(ptn);
+free(rtn);
+free(yest);
+free(xest);
+free(rest);
+free(fslen);
 }
 else if(debug  == 1)
 {
@@ -2127,6 +2135,7 @@ double trace(unsigned char image_label[Y_SIZE][X_SIZE], int xs, int ys)
 				/* no break */
 		}
 	}
+	return 0;
 }
 
 
