@@ -269,7 +269,7 @@ free(rtn);
 free(yest);
 free(xest);
 free(rest);
-free(fslen);
+free(c);
 }
 else if(debug  == 1)
 {
