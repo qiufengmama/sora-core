@@ -219,9 +219,22 @@ if(debug == 0)
 	int yi = 0;
 	int ii = 0;
 	int ci = 0;
-	long fslen = (((lim*lim)*3)*3+((lim*lim)*3))*2+lim;
-	char c[fslen];
+	long fslen = (	((lim*lim)*3)*3+ ((lim*lim)*3)*3	) *2+lim;
+	//char c[fslen];
+
+	char *c = (char *)malloc(fslen); // allocate memory
+	//(unsigned char *)malloc((size_t)fslen);
+;
+	//fread(image_buf, sizeof(unsigned char), (size_t)(long)X_SIZE*Y_SIZE*3, fp);
+
+
 	fgets(c, fslen, stdin);
+
+
+
+
+
+
 	//DECL END
 if(c != NULL)
 {
@@ -263,13 +276,14 @@ if(c != NULL)
 		ci = 0;
 		ii = 0;
 }
-free(btn);
-free(ptn);
-free(rtn);
-free(yest);
-free(xest);
-free(rest);
+free(&btn);
+free(&ptn);
+free(&rtn);
 free(c);
+//free(yest);
+//free(xest);
+//free(rest);
+//free(&c);
 }
 else if(debug  == 1)
 {
