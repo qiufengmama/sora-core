@@ -50,13 +50,13 @@ int main(int argc, char *argv[]) {
  * VAR DEFINE
  */
 	//LISTING DEFAULT
-	int threshold_rgb = 50;
-	int threshold_ysh = 50;
-	double threshold_ff = 0.3; // *100
+	int threshold_rgb = 90; //90?
+	int threshold_ysh = 90; //90?
+	double threshold_ff = 0.3; // *100 // OPTIMAL 0.3?
 	int lim = (Y_SIZE+X_SIZE)/2;
-	int a = 0;
-	int b = 128;
-	int clrv = 1;
+	int a = 0;  //OPTIMAL 0!
+	int b = 32; //OPTIMAL 128?
+	int clrv = 1; // 0 FOR ONE, VICE VERSA => CLRV = N+1
 	//DEBUG ONLY
 
 	//debug(str);
@@ -72,6 +72,9 @@ int main(int argc, char *argv[]) {
 
 	char *path_thr_a = join(join(join(CORE_CODE_NAME, "_THR_A_"), tochar(TIME)), ".bmp");
 	char *path_thr_b = join(join(join(CORE_CODE_NAME, "_THR_B_"), tochar(TIME)), ".bmp");
+
+	char *path_src_a = join(join(join(CORE_CODE_NAME, "_SRC_A_"), tochar(TIME)), ".bmp");
+	char *path_src_b = join(join(join(CORE_CODE_NAME, "_SRC_B_"), tochar(TIME)), ".bmp");
 
 	int debug = 1;
 
@@ -276,10 +279,10 @@ if(c != NULL)
 		ci = 0;
 		ii = 0;
 }
-free(&btn);
-free(&ptn);
-free(&rtn);
-free(c);
+//free(btn);
+//free(ptn);
+//free(rtn);
+//free(c);
 //free(yest);
 //free(xest);
 //free(rest);
@@ -291,6 +294,9 @@ else if(debug  == 1)
 	read_bmp_color(image_test[0], debug_a); // <-
 	read_bmp_color(image_test[1], debug_b); // <-
 }
+
+
+
 /*
  * DATA READ END
  */
@@ -396,7 +402,8 @@ else
 {debug("THR FAIL!");}
 }
 
-
+write_bmp_color(image_test[0], path_src_a);
+write_bmp_color(image_test[1], path_src_b);
 
 //FINISH THE FEATURE DETECTION HERE.......
 
