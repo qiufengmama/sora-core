@@ -436,7 +436,7 @@ int image_ysh[2][3][Y_SIZE][X_SIZE];
 int cl,i,j,fl;
 int true_val=0,false_val=0,total_val=0;
 
-if(debug  == 1)
+if(debug  == 0)
 {
 write_bmp_color(image_sub[0], path_fft_a);
 write_bmp_color(image_sub[1], path_fft_b);
@@ -469,9 +469,9 @@ write_bmp_color(image_sub[1], path_fft_b);
 					//RGB layer
 					//exclude 0(!filtered)
 					//RGB DISTANCE
-					image_dist[0][cl][i][j] = abs(image_sub[0][cl][i][j]-image_sub[1][cl][i][j]);
+					image_dist[0][cl][i][j] = fabs(image_sub[0][cl][i][j]-image_sub[1][cl][i][j]);
 					//YSH DISTANCE
-					image_dist[1][cl][i][j] = abs(image_ysh[0][cl][i][j]-image_ysh[1][cl][i][j]);
+					image_dist[1][cl][i][j] = fabs(image_ysh[0][cl][i][j]-image_ysh[1][cl][i][j]);
 					//DISTANCE WRITE
 				}
 			//if((image_sub[0][1][i][j]  != 0)){
@@ -1746,37 +1746,53 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 					//printf("STDDEV A&B %d =>%f AVG => %f HIGH => %f LOW => %f\n", a, stddev[a], avg[a], d[a][0],d[a][cnt_b-1]);
 					if(
 							((d[a][0]) >= threshold_ff)
-							/*
-							||
-							((dl[a][0]-dl[a][0+1]) <= threshold_ff)
 
 							||
+							/*
+							((dl[a][0]-dl[a][0+1]) <= threshold_ff)
+							||*/
+
 							((dr[a][0]-dr[a][0+1]) <= threshold_ff)
-							*/
+
 					)
 					{
 						//printf("PEAK!\n");
 						cnt_data++;//GET PEAK DATA; MARK AS FOUND....
 						cnt_label++;//LABEL PEAK SEGMENT
 						label[cnt_label] = (a+L_BASE);//LABEL
-						m=sprintf(&buf[posi], ">PEAK DATA LOGIC => %f\n", (d[a][0]-d[a][0+1]));posi += m;
-						m=sprintf(&buf[posi], ">PEAK DATA LENGTH=> %f\n", (dl[a][0]-dl[a][0+1]));posi += m;
-						m=sprintf(&buf[posi], ">PEAK DATA RATIO => %f\n", (dr[a][0]-dr[a][0+1]));posi += m;
+						m=sprintf(&buf[posi], ">PEAK DATA LOGIC => %f\n", (d[a][0]-d[a][0+1])); posi += m;
+						m=sprintf(&buf[posi], ">PEAK DATA LENGTH=> %f\n", (dl[a][0]-dl[a][0+1])); posi += m;
+						m=sprintf(&buf[posi], ">PEAK DATA RATIO => %f\n", (dr[a][0]-dr[a][0+1])); posi += m;
 						double d_dif[cnt_b];
 						double dl_dif[cnt_b];
 						double dr_dif[cnt_b];
-						if((cnt_b-1) > 1)
+						if((cnt_b-1) > 2)//check value COUNT for stat curve analysis,
 						{
 							for(i = 0; i < cnt_b-1; i++)
 							{
-								d_dif[i] =d[a][i]-d[a][i+1];
-								dl_dif[i] = dl[a][i]-dl[a][i+1];
-								dr_dif[i] = dr[a][i]-dr[a][i+1];
+								d_dif[i] = fabs(d[a][i]-d[a][i+1]);
+								dl_dif[i] = fabs(dl[a][i]-dl[a][i+1]);
+								dr_dif[i] = fabs(dr[a][i]-dr[a][i+1]);
 							}
 							double d_stddev = stat_stddev(d_dif, cnt_b-1);
 							double dl_stddev = stat_stddev(dl_dif, cnt_b-1);
 							double dr_stddev = stat_stddev(dr_dif, cnt_b-1);
-							if((d[a][0] + d[a][cnt_b])/2 > d[a][((int)round(cnt_b/2))])
+							double imagine_point = (double)(d[a][0] + d[a][cnt_b]) / 2;
+							double real_point = d[a][((int)round(cnt_b/2))];
+
+							double stat_variation = fabs(fmin(imagine_point / real_point, real_point / imagine_point));
+							double stat_final =
+									((double)stat_variation *d_stddev)
+									//((double)stat_variation *dl_stddev)
+									((double)stat_variation *dr_stddev)
+
+
+
+									;
+							/*
+							if(
+									imagine_point > real_point
+							)
 							{
 								//VALUE DOES NOT VARY
 								//printf("\nSTDDEV LOGIC STAT [CURVE]=> :%f \n", d_stddev);
@@ -1792,6 +1808,7 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 								//printf("\nSTDDEV LOGIC STAT [!CURVE]=> :%f \n", dl_stddev);
 								//printf("\nSTDDEV LOGIC STAT [!CURVE]=> :%f \n", dr_stddev);
 							}
+							*/
 
 							//cnt_data = cnt_data + (d_stddev+dl_stddev+dr_stddev);
 
