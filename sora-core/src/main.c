@@ -436,7 +436,7 @@ int image_ysh[2][3][Y_SIZE][X_SIZE];
 int cl,i,j,fl;
 int true_val=0,false_val=0,total_val=0;
 
-if(debug  == 0)
+if(debug  == 1)
 {
 write_bmp_color(image_sub[0], path_fft_a);
 write_bmp_color(image_sub[1], path_fft_b);
@@ -464,7 +464,7 @@ write_bmp_color(image_sub[1], path_fft_b);
 			if((long)sqrt((double)((j-X_SIZE/2)*(j-X_SIZE/2) + (i-Y_SIZE/2)*(i-Y_SIZE/2))) <= b)
 			{// 0 CHECK START
 				total_val++;
-				for(cl = 0;cl <=2; cl++)
+				for(cl = 0;cl <= 2; cl++)
 				{
 					//RGB layer
 					//exclude 0(!filtered)
@@ -1744,28 +1744,31 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 					m=sprintf(&buf[posi], ">VALUE => H-L =  %f\n",d[a][0]- d[a][cnt_b-1]);posi += m;
 
 					//printf("STDDEV A&B %d =>%f AVG => %f HIGH => %f LOW => %f\n", a, stddev[a], avg[a], d[a][0],d[a][cnt_b-1]);
+					/*
 					if(
 							((d[a][0]) >= threshold_ff)
 
 							||
-							/*
-							((dl[a][0]-dl[a][0+1]) <= threshold_ff)
-							||*/
+
+							//((dl[a][0]-dl[a][0+1]) <= threshold_ff)
+
+							//||
 
 							((dr[a][0]-dr[a][0+1]) <= threshold_ff)
 
 					)
 					{
+					*/
 						//printf("PEAK!\n");
-						cnt_data++;//GET PEAK DATA; MARK AS FOUND....
-						cnt_label++;//LABEL PEAK SEGMENT
-						label[cnt_label] = (a+L_BASE);//LABEL
+
+
 						m=sprintf(&buf[posi], ">PEAK DATA LOGIC => %f\n", (d[a][0]-d[a][0+1])); posi += m;
 						m=sprintf(&buf[posi], ">PEAK DATA LENGTH=> %f\n", (dl[a][0]-dl[a][0+1])); posi += m;
 						m=sprintf(&buf[posi], ">PEAK DATA RATIO => %f\n", (dr[a][0]-dr[a][0+1])); posi += m;
 						double d_dif[cnt_b];
 						double dl_dif[cnt_b];
 						double dr_dif[cnt_b];
+						printf("#########STAT DATA %d###PREPARE\n", a);
 						if((cnt_b-1) > 2)//check value COUNT for stat curve analysis,
 						{
 							for(i = 0; i < cnt_b-1; i++)
@@ -1777,18 +1780,59 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 							double d_stddev = stat_stddev(d_dif, cnt_b-1);
 							double dl_stddev = stat_stddev(dl_dif, cnt_b-1);
 							double dr_stddev = stat_stddev(dr_dif, cnt_b-1);
-							double imagine_point = (double)(d[a][0] + d[a][cnt_b]) / 2;
-							double real_point = d[a][((int)round(cnt_b/2))];
 
-							double stat_variation = fabs(fmin(imagine_point / real_point, real_point / imagine_point));
+
+							double imagine_point = (double)(d[a][0] + d[a][cnt_b]) / 2;
+							double real_point = d[a][((int)round((double)cnt_b/(double)2))];
+							//1-value -> opposite
+
+							double stat_variation;
+							if(imagine_point > real_point)
+							{
+								stat_variation = (double)fabs((double)imagine_point - (double)real_point)/(double)fmax(real_point, imagine_point);
+							}
+							else if(imagine_point < real_point)
+							{
+								stat_variation = 1-fabs(imagine_point - real_point)/fmax(real_point, imagine_point);
+							}
+							else
+							{
+								stat_variation = 0;
+							}
+							//second way, not recommended:
+							//double stat_variation = 1 - fabs(fmin(imagine_point / real_point, real_point / imagine_point));
+							//
+							double stat_ana = pow(stat_variation, pow((double)10*((double)1-stat_variation),pow((double)1/((double)1-stat_variation), (double)1/((double)1-stat_variation))));
+							//y=x^{10|_cdot_({1-x})^{|_frac_{{1};{({1-x})}}^{|_frac_{{1};{({1-x})}}}}} <- detection equation
+							printf("#########STAT DATA %d#####START\n", a);
+							printf(">POINT 0       => %f\n", d[a][0]);
+							printf(">POINT n       => %f\n", d[a][cnt_b]);
+							printf(">INDEX 0       => %d\n", 0);
+							printf(">INDEX n       => %d\n", cnt_b);
+							printf(">INDEX (n+0)/2 => %d\n", ((int)round((double)cnt_b/(double)2)));
+							printf(">IMAGINE POINT => %f\n", imagine_point);
+							printf(">REAL    POINT => %f\n", real_point);
+							printf(">VARIATION(DIF)=> %f\n", stat_variation);
+							printf(">PEAK VALUE    => %f\n", stat_ana);
+							printf("#########STAT DATA %d#######END\n", a);
+							cnt_data = cnt_data+stat_ana;
+							//GET PEAK DATA; MARK AS FOUND WITH ANA STATS
+							cnt_label++;
+							//LABEL PEAK SEGMENT
+							label[cnt_label] = (a+L_BASE);
+							//LABEL CONSTANTS SET
+
+
+							/*
 							double stat_final =
 									((double)stat_variation *d_stddev)
 									//((double)stat_variation *dl_stddev)
-									((double)stat_variation *dr_stddev)
+									//((double)stat_variation *dr_stddev)
+									;//double ends here...
+							*/
 
 
 
-									;
 							/*
 							if(
 									imagine_point > real_point
@@ -1820,9 +1864,11 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 							//IF CNT < ORIGINAL CNT *BY VALUE*; THEN => MATRIX A < MATRIX B BY *VALUE*
 							//IF CNT = 0; THEN => MATRIX A != MATRIX B
 						}
-					}
-					else
+						printf("#########STAT DATA %d##COMPLETE\n\n", a);
+					//}
+					/*else
 					{
+
 					   //printf("PEAK!\n");
 						cnt_data++;//GET PEAK DATA; MARK AS FOUND....
 						//TODO FIX CNT_B = 0 => NaN or inf BUG!
@@ -1846,13 +1892,13 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 								dr_dif[i] = dr[a][i]-dr[a][i+1];
 							}
 							//DEBUG
-							/*
-							int z;
-							printf("CURRENT STDDEV ARRAY VALUE=> {");
-							for(z = 0; z < cnt_b-1; z++)
-								printf("%f, ", d_dif[z]);
-							printf("}\n");
-							*/
+
+							//int z;
+							//printf("CURRENT STDDEV ARRAY VALUE=> {");
+							//for(z = 0; z < cnt_b-1; z++)
+							//	printf("%f, ", d_dif[z]);
+							//printf("}\n");
+
 							//DEBUG
 							double d_stddev = stat_stddev(d_dif, cnt_b-1);
 							double dl_stddev = stat_stddev(dl_dif, cnt_b-1);
@@ -1884,6 +1930,7 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 							//IF CNT = 0; THEN => MATRIX A != MATRIX B
 						}
 					}
+					*/
 					//HERE, LOOP THROUGH THR CNT MATRIX; SORT THRESHOLD DATA
 					//CALCULATE DIFFERENCE BETWEEN ARRAY DAT A AND FIND UNIQUE VALUE(PEAK TARGET DATA):3
 					//ALG => FIND UNIQUE DATA(ONE)
