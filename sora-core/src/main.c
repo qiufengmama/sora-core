@@ -477,12 +477,25 @@ write_bmp_color(image_sub[1], path_fft_b);
 			//if((image_sub[0][1][i][j]  != 0)){
 				if(
 						/*(image_sub[0][1][i][j]  != 0) && */
-						(((image_dist[0][0][i][j] +
-						image_dist[0][1][i][j] +
-						image_dist[0][2][i][j]) <= threshold_rgb) ||
-						((image_dist[1][0][i][j] <= threshold_ysh) &&
-						(image_dist[1][1][i][j] <= threshold_ysh) &&
-						(image_dist[1][2][i][j] <= threshold_ysh)))
+						(
+
+						((image_dist[0][0][i][j]
+						+
+						image_dist[0][1][i][j]
+						+
+						image_dist[0][2][i][j])
+						<=
+						threshold_rgb)
+
+						||
+
+						((image_dist[1][0][i][j] <= threshold_ysh)
+						&&
+						(image_dist[1][1][i][j] <= threshold_ysh)
+						&&
+						(image_dist[1][2][i][j] <= threshold_ysh))
+
+						)
 					)
 				{
 					//int fl;
@@ -539,6 +552,7 @@ int clr;
 /*
  * AMPLIFY CONVOLUTION
  */
+clrv--;
 unsigned char image_conv[clrv+1][3][Y_SIZE][X_SIZE];
 assign(image_conv[0][0], image_rslt[0]);
 assign(image_conv[0][1], image_rslt[1]);
@@ -655,13 +669,15 @@ void convolute(unsigned char image_in[Y_SIZE][X_SIZE], unsigned char image_out[Y
 			int centre =
 			(image_in[i-1][j-1] * c)
 			+(image_in[i-1][j] * c)
-			+(image_in[i-1][j+1] * c)
+			+(image_in[i-1][j+1] * c) //row 1
+
 			+(image_in[i][j-1] * c)
-			+(image_in[i][j] * c)
-			+(image_in[i][j+1] * c)
+			+(image_in[i][j] * c) //(self)
+			+(image_in[i][j+1] * c) //row 2
+
 			+(image_in[i+1][j-1] * c)
 			+(image_in[i+1][j] * c)
-			+(image_in[i+1][j] * c);
+			+(image_in[i+1][j+1] * c); //row 3
 			if(centre >= 255)
 				centre = 255;
 			if(centre <= 0)
@@ -1812,6 +1828,8 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 							printf(">INDEX (n+0)/2 => %d\n", ((int)round((double)cnt_b/(double)2)));
 							printf(">IMAGINE POINT => %f\n", imagine_point);
 							printf(">REAL    POINT => %f\n", real_point);
+							printf(">REAL    INDEX => %f\n", real_point);
+							// T OR F
 							printf(">VARIATION(DIF)=> %f\n", stat_variation);
 							printf(">PEAK VALUE    => %f\n", stat_ana);
 							printf("#########STAT DATA %d#######END\n", a);
@@ -2028,14 +2046,14 @@ double calc_distance(unsigned char image_label_a[Y_SIZE][X_SIZE],
 	int shift_ax, shift_ay;
 	int shift_bx, shift_by;
 	//SHIFT A TO B
-	shift_ax = ((centre_bx) - centre_ax);
-	shift_ay = ((centre_by) - centre_ay);
+	shift_ax = centre_bx - centre_ax;
+	shift_ay = centre_by - centre_ay;
 	//SHIFT B TO A
-	shift_bx = ((centre_ax) - centre_bx);
-	shift_by = ((centre_ay) - centre_by);
+	shift_bx = centre_ax - centre_bx;
+	shift_by = centre_ay - centre_by;
 	//printf("\n=>SHIFT XY => !");
-	//printf("!LB => %d A(X, Y) => A(%d, %d)", label_a, centre_ax, centre_ay);
-	//printf("!LB => %d B(X, Y) => B(%d, %d)<=",label_b, centre_bx, centre_by);
+	//printf("LOGIC INTERSECTION: %d => A(%d, %d); SHIFT => X:%d, Y:%d\n", label_a, centre_ax, centre_ay, shift_ax, shift_ay);
+	//printf("LOGIC INTERSECTION: %d => B(%d, %d); SHIFT => X:%d, Y:%d\n", label_b, centre_bx, centre_by, shift_bx, shift_by);
 
 	int	i, j;
 	//CENTRE POINT SHIFT END
@@ -2045,18 +2063,161 @@ double calc_distance(unsigned char image_label_a[Y_SIZE][X_SIZE],
 	{
 		for (j = 0; j < X_SIZE; j++)
 		{
-			//MATRIX SHIFT
+
 			if(
-					//A REMAINS STILL
-					image_label_a[i][j] == (label_a+L_BASE) &&
-					//SHIFT B TO A
-					image_label_b[i+shift_by][j+shift_bx] == (label_b+L_BASE)
+					//(shift_bx > shift_ax) && (shift_by > shift_ay)
+					1==1
+			)
+			{
+				if(image_label_a[i][j] == (label_a+L_BASE))
+				{
+					if(
+							((i+shift_bx > 0)&&(j+shift_by > 0))        &&
+							((i+shift_bx < X_SIZE)&&(j+shift_by < Y_SIZE))
+					)
+					{
+					if(image_label_b[i+shift_bx][j+shift_by] == (label_b+L_BASE))
+						{
+							total++;
+
+							if((i+shift_bx < 0)||(j+shift_by < 0))
+							{
+								printf("SHIFT ERROR!:BAD INDEX ON A%02dB%02d AT (%+04d,%+04d) WHERE SHIFT [%+04d][%+04d] CAUSES (%+04d,%+04d)\n", label_a, label_b, i,j, shift_bx, shift_by, i+shift_bx, j+shift_by);
+								printf(".	=>TRACE : SHIFT VALUE = [%+04d][%+04d]\n", shift_bx, shift_by);
+								printf(".	.	=>TRACE : AT A%02dB%02d\n",label_a ,label_b);
+								printf(".	.	.	=>TRACE : CENTRE VALUE = A%02d[%+04d][%+04d] B%02d[%+04d][%+04d]\n\n",label_b, centre_bx, centre_by, label_a, centre_ax, centre_ay);
+							}
+
+						}
+					}
+					else
+					{
+						//OUT OF BOUND ERROR
+					}
+				}
+			}
+			/*
+			else if((shift_bx < shift_ax) && (shift_by < shift_ay))
+			{
+				if(image_label_b[i][j] == (label_a+L_BASE))
+				{
+					if(image_label_a[i+shift_ax][j+shift_ay] == (label_b+L_BASE))
+					{
+						total++;
+						if((i+shift_ax < 0)||(j+shift_ay < 0))
+						{
+							printf("SHIFT ERROR!:BAD INDEX ON A%02dB%02d AT (%+04d,%+04d) WHERE SHIFT [%+04d][%+04d] CAUSES (%+04d,%+04d)\n", label_a, label_b, i,j, shift_ax, shift_ay, i+shift_ax, j+shift_ay);
+							printf(".	=>TRACE : SHIFT VALUE = [%+04d][%+04d]\n", shift_ax, shift_ay);
+							printf(".	.	=>TRACE : AT A%02dB%02d\n",label_a ,label_b);
+							printf(".	.	.	=>TRACE : CENTRE VALUE = A%02d[%+04d][%+04d] B%02d[%+04d][%+04d]\n\n",label_b, centre_bx, centre_by, label_a, centre_ax, centre_ay);
+						}
+					}
+				}
+			}
+			else if((shift_bx > shift_ax) && (shift_by < shift_ay))
+			{
+				if(image_label_b[i+shift_ax][j] == (label_a+L_BASE))
+				{
+					if(image_label_a[i][j+shift_ay] == (label_b+L_BASE))
+					{
+						total++;
+						if((i+shift_ax < 0)||(j+shift_ay < 0))
+						{
+							printf("SHIFT ERROR!:BAD INDEX ON A%02dB%02d AT (%+04d,%+04d) WHERE SHIFT [%+04d][%+04d] CAUSES (%+04d,%+04d)\n", label_a, label_b, i,j, shift_ax, shift_ay, i+shift_ax, j+shift_ay);
+							printf(".	=>TRACE : SHIFT VALUE = [%+04d][%+04d]\n", shift_ax, shift_ay);
+							printf(".	.	=>TRACE : AT A%02dB%02d\n",label_a ,label_b);
+							printf(".	.	.	=>TRACE : CENTRE VALUE = A%02d[%+04d][%+04d] B%02d[%+04d][%+04d]\n\n",label_b, centre_bx, centre_by, label_a, centre_ax, centre_ay);
+						}
+					}
+				}
+			}
+			else if((shift_bx < shift_ax) && (shift_by > shift_ay))
+			{
+				if(image_label_b[i+shift_bx][j] == (label_a+L_BASE))
+				{
+					if(image_label_a[i][j+shift_ay] == (label_b+L_BASE))
+					{
+						total++;
+						if((i+shift_bx < 0)||(j+shift_ay < 0))
+						{
+							printf("SHIFT ERROR!:BAD INDEX ON A%02dB%02d AT (%+04d,%+04d) WHERE SHIFT [%+04d][%+04d] CAUSES (%+04d,%+04d)\n", label_a, label_b, i,j, shift_ax, shift_ay, i+shift_ax, j+shift_ay);
+							printf(".	=>TRACE : SHIFT VALUE = [%+04d][%+04d]\n", shift_ax, shift_ay);
+							printf(".	.	=>TRACE : AT A%02dB%02d\n",label_a ,label_b);
+							printf(".	.	.	=>TRACE : CENTRE VALUE = A%02d[%+04d][%+04d] B%02d[%+04d][%+04d]\n\n",label_b, centre_bx, centre_by, label_a, centre_ax, centre_ay);
+						}
+					}
+				}
+			}
+			*/
+			else
+			{
+				//printf("SHIFT ERROR!:BAD INDEX ON A%02dB%02d AT (%+04d,%+04d) WHERE SHIFT [%+04d][%+04d] CAUSES (%+04d,%+04d)\n", label_a, label_b, i,j, shift_ax, shift_ay, i+shift_ax, j+shift_ay);
+				//printf(".	=>TRACE : SHIFT VALUE = [%+04d][%+04d]\n", shift_ax, shift_ay);
+				//printf(".	.	=>TRACE : AT A%02dB%02d\n",label_a ,label_b);
+				//printf(".	.	.	=>TRACE : CENTRE VALUE = A%02d[%+04d][%+04d] B%02d[%+04d][%+04d]\n\n",label_b, centre_bx, centre_by, label_a, centre_ax, centre_ay);
+
+			}
+			//MATRIX SHIFT
+			//printf("SHIFT DATA: A%d => ASSIGNED INDEX => [%d][%d]\n", label_a, i, j);
+			//printf("SHIFT DATA: B%d => ASSIGNED INDEX => [%d][%d]\n", label_b, i+shift_by, j+shift_bx);
+			/*
+			if((shift_bx > shift_ax)||(shift_by > shift_ay))
+			{
+				if(//image_label_a[i+shift_ax][j+shift_ax] == (label_a+L_BASE)
+				//&&
+				image_label_b[i][j] == (label_b+L_BASE)
+				)
+				{
+					if(image_label_a[i+shift_ax][j+shift_ax] == (label_a+L_BASE))
+					{
+						total++;
+						if((i+shift_ay < 0)||(j+shift_ax < 0))
+							printf("SHIFT ERROR 01: A%d, B%d => BAD INDEX => %d,%d[%d][%d]\n", label_a, label_b, i,j, (shift_by), (shift_bx));
+					}
+				}
+
+			}
+			if((shift_bx < shift_ax)||(shift_by < shift_ay))//refinements here
+			{
+				//(i+shift_ay < 0)||(j+shift_ax < 0)
+				if(//image_label_b[i+shift_by][j+shift_bx] == (label_b+L_BASE)
+				//&&
+				image_label_a[i][j] == (label_a+L_BASE)
+				)
+				{
+					if(image_label_b[i+shift_by][j+shift_bx] == (label_b+L_BASE))
+					{
+						total++;
+						if((i+shift_by < 0)||(j+shift_bx < 0))
+							printf("SHIFT ERROR 02: A%d, B%d => BAD INDEX => %d,%d[%d][%d]\n", label_a, label_b, i,j, (shift_by), (shift_bx));
+					}
+				}
+
+			}
+			*/
+			/*
+			if(
+					//A REMAINS STILL, NO CHANGE
+					image_label_a[i][j] == (label_a+L_BASE) //&&
+					//SHIFT B TO A, SHIFT PIXEL LOCATION
+
+					//TODO ENSURE VALUE DOES NOT POINT TO UNDEFINED SEGMENTS!
+					//TODO CHECK FOR NEGATIVE VALUE
+					//TODO IF ELSE OR MIN MAX TO COMPENSATE NEGATIVE VALUES
 			)
 			{
 			//INCREMENTAL
-			total++;
-			}
+				if(image_label_b[i+shift_by][j+shift_bx] == (label_b+L_BASE))
+				{
+					total++;
+					if((i+shift_by < 0)||(j+shift_bx < 0))
+					{
+						printf("SHIFT ERROR: A%d, B%d => ERROR INDEX => %d,%d[%d][%d]\n", label_a, label_b, i,j, (shift_by), (shift_bx));
+					}
+				}
 
+			}
+			*/
 			//TODO ADD OTHER FUNCTIONS....
 		}
 	}
@@ -2365,5 +2526,22 @@ int median_value(unsigned char c[9])
 
 /*
  * NOISE END
+ */
+/*
+ * CORE UTILITY
+ */
+/*
+void core_trace(const char* d1, const char* d2)
+{
+
+}
+void core_log(const int level , const char* data)
+{
+
+}
+*/
+
+/*
+ * CORE UTILITY END
  */
 
