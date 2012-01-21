@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
 	//char *image_0_path = "miyako_FFT.bmp";
 	//char *image_1_path = "miyako_FFT_flt.bmp";
 	//image_path = "MIYAKO.bmp";
-	//clock_t start = clock();
+	clock_t start = clock();
 	//clock_t start_read = clock();
 	//clock_t start_fft = clock();
 /*
@@ -447,7 +447,7 @@ write_bmp_color(image_sub[1], path_fft_b);
 //if((WRITE_FFT0 != -1) && (WRITE_FFT1 != -1))
 //{//check FFT
 	//printf("FFT WRITE OK!\n");
-	//printf("WRITE Time elapsed: %fs\n", ((double)clock() - start_write) / CLOCKS_PER_SEC);
+
 	//printf("TOTAL Time elapsed: %fs\n", ((double)clock() - start) / CLOCKS_PER_SEC);}
 	rgb_to_ysh(image_sub[0],image_ysh[0]);//ysh convert image 0
 	rgb_to_ysh(image_sub[1],image_ysh[1]);//ysh convert image 1
@@ -612,7 +612,10 @@ printf("PIXEL DIFFER: %d,\n", c_false);
 if(debug  == 1)
 {
 write_bmp_color(image_out, path_fft_x);
+printf("\nET: %fs\n", ((double)clock() - start) / CLOCKS_PER_SEC);
 }
+
+
 
 
 	return EXIT_SUCCESS;
@@ -1793,9 +1796,9 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 								dl_dif[i] = fabs(dl[a][i]-dl[a][i+1]);
 								dr_dif[i] = fabs(dr[a][i]-dr[a][i+1]);
 							}
-							double d_stddev = stat_stddev(d_dif, cnt_b-1);
-							double dl_stddev = stat_stddev(dl_dif, cnt_b-1);
-							double dr_stddev = stat_stddev(dr_dif, cnt_b-1);
+							//double d_stddev = stat_stddev(d_dif, cnt_b-1);
+							//double dl_stddev = stat_stddev(dl_dif, cnt_b-1);
+							//double dr_stddev = stat_stddev(dr_dif, cnt_b-1);
 
 
 							double imagine_point = (double)(d[a][0] + d[a][cnt_b]) / 2;
