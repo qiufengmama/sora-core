@@ -227,7 +227,7 @@ if(debug == 0)
 
 	char *c = (char *)malloc(fslen); // allocate memory
 	//(unsigned char *)malloc((size_t)fslen);
-;
+
 	//fread(image_buf, sizeof(unsigned char), (size_t)(long)X_SIZE*Y_SIZE*3, fp);
 
 
@@ -609,10 +609,13 @@ printf("PIXEL SIMILAR: %d,\n", c_true);
 printf("PIXEL DIFFER: %d,\n", c_false);
 */
 
-if(debug  == 1)
+if(debug == 1)
 {
 write_bmp_color(image_out, path_fft_x);
+double diff_seg = general_segmentation(image_sub[0],image_sub[1] ,3);
+printf("\nSEGMENTATION DISTANCE: %f\n", diff_seg);
 printf("\nET: %fs\n", ((double)clock() - start) / CLOCKS_PER_SEC);
+
 }
 
 
@@ -1787,7 +1790,7 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 						double d_dif[cnt_b];
 						double dl_dif[cnt_b];
 						double dr_dif[cnt_b];
-						printf("#########STAT DATA %d###PREPARE\n", a);
+						//printf("#########STAT DATA %d###PREPARE\n", a);
 						if((cnt_b-1) > 2)//check value COUNT for stat curve analysis,
 						{
 							for(i = 0; i < cnt_b-1; i++)
@@ -1823,6 +1826,7 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 							//
 							double stat_ana = pow(stat_variation, pow((double)10*((double)1-stat_variation),pow((double)1/((double)1-stat_variation), (double)1/((double)1-stat_variation))));
 							//y=x^{10|_cdot_({1-x})^{|_frac_{{1};{({1-x})}}^{|_frac_{{1};{({1-x})}}}}} <- detection equation
+							/*
 							printf("#########STAT DATA %d#####START\n", a);
 							printf(">POINT 0       => %f\n", d[a][0]);
 							printf(">POINT n       => %f\n", d[a][cnt_b]);
@@ -1836,6 +1840,7 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 							printf(">VARIATION(DIF)=> %f\n", stat_variation);
 							printf(">PEAK VALUE    => %f\n", stat_ana);
 							printf("#########STAT DATA %d#######END\n", a);
+							*/
 							cnt_data = cnt_data+stat_ana;
 							//GET PEAK DATA; MARK AS FOUND WITH ANA STATS
 							cnt_label++;
@@ -1885,7 +1890,7 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 							//IF CNT < ORIGINAL CNT *BY VALUE*; THEN => MATRIX A < MATRIX B BY *VALUE*
 							//IF CNT = 0; THEN => MATRIX A != MATRIX B
 						}
-						printf("#########STAT DATA %d##COMPLETE\n\n", a);
+						//printf("#########STAT DATA %d##COMPLETE\n\n", a);
 					//}
 					/*else
 					{
@@ -2032,6 +2037,18 @@ double stat_avg(double stat[], int stat_count)
 
 
 	return avg_c;
+}
+double euclidean_dist(double array[][2], int count)
+{
+	int i;
+	double unity;
+	for(i = 0; i <= count; i++)
+	{
+		unity =+ pow((array[i][1]-array[i][2]), 2);
+	}
+
+
+	return sqrt(unity);
 }
 
 double calc_distance(unsigned char image_label_a[Y_SIZE][X_SIZE],
@@ -2292,6 +2309,66 @@ void features_structure(unsigned char label_in[Y_SIZE][X_SIZE], double distance[
 
 			}
 		}
+}
+
+double general_segmentation(unsigned char image_a[2][Y_SIZE][X_SIZE],unsigned char image_b[2][Y_SIZE][X_SIZE], int segment_size)
+{
+	int i, j;
+	int c;
+	//double d;
+
+	div_t segment_y = div(Y_SIZE, segment_size);
+	//segment_y;
+	div_t segment_x = div(X_SIZE, segment_size);
+	//segment_x;
+	double matrix_a[3],matrix_b[3];
+	double diff;
+	double matrix_diff[3][segment_size*segment_size][2];
+
+	//int segemnt = Y_SIZE/segment_size;
+	int seg_y, seg_x;
+	int counter = 1;
+
+
+	for(seg_y = 1; seg_y <= segment_size; seg_y++)
+	{
+		for(seg_x = 1; seg_x <= segment_size; seg_x++)
+		{
+		//---------------
+		for (i = segment_y.quot*(seg_y-1); i < segment_y.quot; i++)
+			{
+				for (j = segment_y.quot*(seg_x-1); j < segment_x.quot; j++)
+				{
+					//if(i > segment)
+					for(c = 1;c <= 3;c++)
+					{
+						matrix_a[c] += image_a[c][i][j];
+						matrix_b[c] += image_b[c][i][j];
+					}
+
+				}
+			}
+		for(c = 1;c <= 3;c++)
+		{
+			matrix_diff[c][counter++][1] = (matrix_a[c]/(segment_x.quot*segment_y.quot));
+			matrix_diff[c][counter++][2] = (matrix_b[c]/(segment_x.quot*segment_y.quot));
+		}
+		//matrix_diff[counter++][1] = (matrix_a/(segment_x.quot*segment_y.quot));
+		//matrix_diff[counter++][2] = (matrix_b/(segment_x.quot*segment_y.quot));
+		//---------------
+		}
+	}
+
+	//diff = fabs((matrix_a/(segment_x.quot*segment_y.quot))-(matrix_b/(segment_x.quot*segment_y.quot)));
+
+	for(c = 1;c <= 3;c++)
+	{
+		diff += euclidean_dist(matrix_diff[c], segment_size*segment_size);
+	}
+
+
+	//diff = euclidean_dist(matrix_diff, segment_size*segment_size);
+	return diff/(double)3;
 }
 /*
 double calc_equalize(unsigned char image_label[Y_SIZE][X_SIZE],
