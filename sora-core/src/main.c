@@ -357,7 +357,7 @@ features(image_label[1], image_feature[1], cnt_b, size_b, length_b, ratio_b, tex
 //printf("CNT B:%d\n", cnt_b);
 //printf("\nA=>\n%s\n<=A\n", text_buf_a);
 //printf("\nB=>\n%s\n<=B\n", text_buf_b);
-
+double diff_seg = general_segmentation(image_test[0], image_test[1], 3);
 
 double rslt;
 int label[HIGH];
@@ -612,7 +612,7 @@ printf("PIXEL DIFFER: %d,\n", c_false);
 if(debug == 1)
 {
 write_bmp_color(image_out, path_fft_x);
-double diff_seg = general_segmentation(image_sub[0],image_sub[1] ,3);
+
 printf("\nSEGMENTATION DISTANCE: %f\n", diff_seg);
 printf("\nET: %fs\n", ((double)clock() - start) / CLOCKS_PER_SEC);
 
@@ -2038,15 +2038,14 @@ double stat_avg(double stat[], int stat_count)
 
 	return avg_c;
 }
-double euclidean_dist(double array[][2], int count)
+double euclidean_dist(double array[Y_SIZE*X_SIZE][2], int count)
 {
 	int i;
-	double unity;
-	for(i = 0; i <= count; i++)
+	double unity = 0;
+	for(i = 0; i < count; i++)
 	{
-		unity =+ pow((array[i][1]-array[i][2]), 2);
+		unity += pow((array[i][0]-array[i][1]), 2);
 	}
-
 
 	return sqrt(unity);
 }
@@ -2311,64 +2310,63 @@ void features_structure(unsigned char label_in[Y_SIZE][X_SIZE], double distance[
 		}
 }
 
-double general_segmentation(unsigned char image_a[2][Y_SIZE][X_SIZE],unsigned char image_b[2][Y_SIZE][X_SIZE], int segment_size)
+double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned char image_b[3][Y_SIZE][X_SIZE], int segment_size)
 {
 	int i, j;
 	int c;
 	//double d;
-
 	div_t segment_y = div(Y_SIZE, segment_size);
 	//segment_y;
 	div_t segment_x = div(X_SIZE, segment_size);
 	//segment_x;
-	double matrix_a[3],matrix_b[3];
+	int matrix_a[3],matrix_b[3];
 	double diff;
+
+	int segment_area = ((segment_x.quot)*(segment_y.quot));
 	double matrix_diff[3][segment_size*segment_size][2];
+	double seglength_x = segment_x.quot;
+	double seglength_y = segment_y.quot;
 
 	//int segemnt = Y_SIZE/segment_size;
 	int seg_y, seg_x;
-	int counter = 1;
-
-
+	int counter;
 	for(seg_y = 1; seg_y <= segment_size; seg_y++)
 	{
 		for(seg_x = 1; seg_x <= segment_size; seg_x++)
 		{
-		//---------------
-		for (i = segment_y.quot*(seg_y-1); i < segment_y.quot; i++)
+			for (i = (seglength_y)*(seg_y - 1); i < ((seglength_y)*seg_y)-1; i++)
 			{
-				for (j = segment_y.quot*(seg_x-1); j < segment_x.quot; j++)
+				for (j = (seglength_x)*(seg_x - 1); j < ((seglength_x)*seg_x)-1; j++)
 				{
-					//if(i > segment)
-					for(c = 1;c <= 3;c++)
+					for(c = 0;c < 3;c++)
 					{
 						matrix_a[c] += image_a[c][i][j];
 						matrix_b[c] += image_b[c][i][j];
 					}
-
 				}
 			}
-		for(c = 1;c <= 3;c++)
+		for(c = 0;c < 3;c++)
 		{
-			matrix_diff[c][counter++][1] = (matrix_a[c]/(segment_x.quot*segment_y.quot));
-			matrix_diff[c][counter++][2] = (matrix_b[c]/(segment_x.quot*segment_y.quot));
+			matrix_diff[c][counter][0] = (double)matrix_a[c]/segment_area;
+			matrix_diff[c][counter][1] = (double)matrix_b[c]/segment_area;
 		}
-		//matrix_diff[counter++][1] = (matrix_a/(segment_x.quot*segment_y.quot));
-		//matrix_diff[counter++][2] = (matrix_b/(segment_x.quot*segment_y.quot));
-		//---------------
+		counter++;
 		}
 	}
-
-	//diff = fabs((matrix_a/(segment_x.quot*segment_y.quot))-(matrix_b/(segment_x.quot*segment_y.quot)));
-
-	for(c = 1;c <= 3;c++)
+	for(c = 0;c < 3;c++)
 	{
 		diff += euclidean_dist(matrix_diff[c], segment_size*segment_size);
 	}
 
+	printf("\nEUCLIDEAN DISTANCE:\n");
+	printf("SEGMENTATION TOTAL:%d\n",counter);
+	printf("SEGMENTATION ASSIGN:%d\n",segment_size*segment_size);
 
+	printf("R:%f\n",euclidean_dist(matrix_diff[0], segment_size*segment_size));
+	printf("G:%f\n",euclidean_dist(matrix_diff[1], segment_size*segment_size));
+	printf("B:%f\n",euclidean_dist(matrix_diff[2], segment_size*segment_size));
 	//diff = euclidean_dist(matrix_diff, segment_size*segment_size);
-	return diff/(double)3;
+	return diff/3;
 }
 /*
 double calc_equalize(unsigned char image_label[Y_SIZE][X_SIZE],
