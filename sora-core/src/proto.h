@@ -6,7 +6,7 @@
 int X_SIZE = 256;
 int Y_SIZE = 256;
 //DEBUG CONSTANT
-char *debug_a = "uxa.bmp";
+char *debug_a = "ux2.bmp";
 char *debug_b = "ux1.bmp";
 
 
@@ -28,8 +28,12 @@ double stat_avg(double stat[], int stat_count);
 
 
 
-
 //SPECIAL STAT FUNCTION END
+
+//STANDARD DISTANCE DUNCTION
+
+double euclidean_dist(double array[Y_SIZE*X_SIZE][2], int count);
+//STANDARD DISTANCE FUNCTION END
 
 void affine(unsigned char image_in[Y_SIZE][X_SIZE], 
 	unsigned char image_out[Y_SIZE][X_SIZE], 
@@ -155,6 +159,10 @@ void masking(unsigned char image_int[Y_SIZE][X_SIZE],
 	unsigned char image_maskt[Y_SIZE][X_SIZE]);
 void label_masking(unsigned char image_lable[Y_SIZE][X_SIZE], unsigned char image_out[Y_SIZE][X_SIZE],int label[],int cc);
 void labelset(unsigned char image[Y_SIZE][X_SIZE], int xs, int ys, int label);
+
+
+double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned char image_b[3][Y_SIZE][X_SIZE], int segment_size);
+
 /*
  * FEATURE END
  */
