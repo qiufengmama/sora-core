@@ -369,7 +369,8 @@ assign(image_general[1][1], image_test[1][1]);// <-
 assign(image_general[1][2], image_test[1][2]);// <-
 
 //print_image(image_general[0], 1);
-double diff_seg = general_segmentation(image_test[0], image_test[1], 64);
+double diff_seg[3];
+general_segmentation(image_test[0], image_test[1], 16, 1, diff_seg);
 
 //print_image(image_general[0],0);
 //double diff_general = general_distance(image_general[0], image_general[1]);
@@ -618,7 +619,8 @@ for (i = 0; i < Y_SIZE; i++)
 //printf("|||||||\n");
 //double diff_fft = general_segmentation(image_sub[0], image_sub[1],64);
 double c_per = (double)c_true/c_total;
-printf("FFT: %f", c_per);
+//printf("FFT: %f", c_per);
+printf("%f;", c_per);
 /*
 printf("PERCENTAGE SIMILAR: %f%%,\n", c_per*100);
 printf("PIXEL TOTAL: %d,\n", c_total);
@@ -626,13 +628,15 @@ printf("PIXEL SIMILAR: %d,\n", c_true);
 printf("PIXEL DIFFER: %d,\n", c_false);
 */
 
+printf("%f", diff_seg[2]);
 if(debug == 1)
 {
 write_bmp_color(image_out, path_fft_x);
 
-printf("\nSEGMENTATION DISTANCE: %f\n", diff_seg);
+
 //printf("\nGENERAL      DISTANCE: %f\n", diff_general);
-printf("\nET: %fs\n", ((double)clock() - start) / CLOCKS_PER_SEC);
+//printf("\nSEGMENTATION DISTANCE: %f\n", diff_seg[1]);
+//printf("\nET: %fs\n", ((double)clock() - start) / CLOCKS_PER_SEC);
 
 }
 
@@ -660,7 +664,7 @@ char *join(const char* s1, const char* s2)
 
 char *tochar(int var)
 {
-	char str[1024];
+	static char str[1024];
 	sprintf(str, "%d", var);
 	return str;
 }
@@ -1749,9 +1753,9 @@ void features_compare(unsigned char	image_label_in_a[Y_SIZE][X_SIZE],
 		//END Ax[DATA] => Ax $$ Bx
 		//SORT Ax[DATA] array
 
-		qsort(d[a], cnt_b, sizeof(double), sort);
-		qsort(dr[a], cnt_b, sizeof(double), sort);
-		qsort(dl[a], cnt_b, sizeof(double), sort);
+		qsort(d[a], cnt_b, sizeof(double), cmp);
+		qsort(dr[a], cnt_b, sizeof(double), cmp);
+		qsort(dl[a], cnt_b, sizeof(double), cmp);
 		/*
 		int z;
 		printf("CURRENT ARRAY VALUE=> {");
@@ -2016,7 +2020,7 @@ double calc_size(unsigned char image_label[Y_SIZE][X_SIZE],
 	return total;
 }
 
-int sort(const void *x, const void *y)
+int cmp(const void *x, const void *y)
 {
   //return (*(double*)x - *(double*)y);
 	double xx = *(double*)x, yy = *(double*)y;
@@ -2331,7 +2335,7 @@ void features_structure(unsigned char label_in[Y_SIZE][X_SIZE], double distance[
 		}
 }
 
-double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned char image_b[3][Y_SIZE][X_SIZE], int segment_size)
+double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned char image_b[3][Y_SIZE][X_SIZE], int segment_size, int mode, double diffval[])
 {
 	int i, j;
 	int c;
@@ -2340,19 +2344,22 @@ double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned ch
 	//segment_y;
 	div_t segment_x = div(X_SIZE, segment_size);
 	//segment_x;
-	int matrix_a[3];
-	int matrix_b[3];
-	for(c = 0;c < 3;c++)
-	{
-		matrix_a[c] = (double)0;
-		matrix_b[c] = (double)0;
-	}
+	static int matrix_a[3];
+	static int matrix_b[3];
 	double diff;
-
+	double mn_diff[3];
+	double mx_diff[3];
+	double min_diff;
+	double max_diff;
+	unsigned char image_out[3][Y_SIZE][X_SIZE];
 	//int segment_area = ((segment_x.quot)*(segment_y.quot));
 	double matrix_diff[3][segment_size*segment_size][2];
+	//double matrix_diff[3][segment_size*segment_size][2];
 	double seglength_x = segment_x.quot;
 	double seglength_y = segment_y.quot;
+	double search_matrix[3][segment_size*segment_size][segment_size*segment_size];
+	double search_identifier[3][1][2];
+
 
 	//int segemnt = Y_SIZE/segment_size;
 	int seg_y, seg_x;
@@ -2365,9 +2372,6 @@ double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned ch
 
 		for(seg_x = 0; seg_x < segment_size; seg_x++)
 		{
-			//printf("FROM[%f] TO [%f] =>",(seglength_y*seg_y), ((seglength_y)*(seg_y+1)));
-			//printf("FROM[%f] TO [%f]\n",(seglength_x*seg_x), ((seglength_x)*(seg_x+1)));
-			//printf("[%f]",seglength_y*seglength_x);
 			for (i = seglength_y*seg_y; i < ((seglength_y)*(seg_y+1)); i++)
 			{
 				for (j = seglength_x*seg_x; j < ((seglength_x)*(seg_x+1)); j++)
@@ -2376,29 +2380,18 @@ double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned ch
 					{
 						matrix_a[c] += image_a[c][i][j];
 						matrix_b[c] += image_b[c][i][j];
-						//if(image_a[c][i][j] != image_b[c][i][j])
-						//	printf("\nVALUE MISMATCH! %d != %d", image_a[c][i][j],image_b[c][i][j]);
 					}
 					pixel_c++;
 					pixel_s++;
-					//printf("[%d]",matrix_a[0]);
 				}
 			}
-			//if(matrix_a[c] != matrix_b[c])
-			//	printf("\nVALUE MISMATCH! %f != %f", matrix_a[c],matrix_b[c]);
 			for(c = 0;c < 3;c++)
 			{
 				matrix_diff[c][counter][0] = (double)matrix_a[c]/(seglength_x*seglength_y);
 				matrix_diff[c][counter][1] = (double)matrix_b[c]/(seglength_x*seglength_y);
-				//if((double)matrix_a[c]/(seglength_x*seglength_y) != (double)matrix_b[c]/(seglength_x*seglength_y))
-				//	printf("\nVALUE MISMATCH AT %d[%d][%d] %f != %f ",counter ,j,i,(double)matrix_a[c]/(seglength_x*seglength_y),(double)matrix_b[c]/(seglength_x*seglength_y));
-			}
-			for(c = 0;c < 3;c++)
-			{
 				matrix_a[c] = 0;
 				matrix_b[c] = 0;
 			}
-
 			counter++;
 			if(pixel_s == (seglength_x*seglength_y))
 			{
@@ -2408,30 +2401,116 @@ double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned ch
 			{
 				printf("BAD INDEX AT %d",counter);
 			}
-			//printf("[%d]",matrix_a[0]);
 		}
-		//printf("\n");
 	}
+
+	double diff_avg = (double)0;
+	if(mode == 1)
+	{
+		double channel_diff[3];
+		for(c = 0;c < 3;c++)
+		{
+			channel_diff[c] = euclidean_dist(matrix_diff[c], segment_size*segment_size);
+		}
+		diff_avg = stat_stddev(channel_diff, 3);
+	}
+
 	for(c = 0;c < 3;c++)
 	{
 		diff += euclidean_dist(matrix_diff[c], segment_size*segment_size);
 	}
 
+	int du, di;
+	for(du = 0; du < segment_size*segment_size; du++)
+	{
+		//printf("[%d]=>{", du);
+		for(di = 0; di < segment_size*segment_size; di++)
+		{
+			for(c = 0;c < 3;c++)
+			{
+				search_identifier[c][0][0] = matrix_diff[c][du][0];
+				search_identifier[c][0][1] = matrix_diff[c][di][1];
+				search_matrix[c][du][di] = euclidean_dist(search_identifier[c], 1);
+				//printf("C%d,A%d:B%d[%f];",c,du,di,search_matrix[c][du][di]);
+			}
+			//printf("\n");
+
+		}
+		//printf("}\n");
+		for(c = 0;c < 3;c++)
+			qsort(search_matrix[c][du], sizeof(search_matrix[c][du])/sizeof(search_matrix[c][du][0]), sizeof(search_matrix[c][du][0]), cmp);
+
+	}
+
+	for(i = 0; i < segment_size*segment_size; i++)
+	{
+		//printf("[%d] => ", i);
+		for(c = 0;c < 3;c++)
+		{
+			//printf("[%d][%f];", c, search_matrix[c][i][size-1]);
+			mn_diff[c] += search_matrix[c][i][segment_size*segment_size-1];
+			mx_diff[c] += search_matrix[c][i][0];
+
+		}
+		//printf("\n");
+
+	}
+	for(c = 0;c < 3;c++)
+	{
+		min_diff += (mn_diff[c]/3);
+		max_diff += (mx_diff[c]/3);
+	}
+
+
+	/*
 	printf("\nEUCLIDEAN DISTANCE:\n");
-	printf("SEGMENTATION    ASSIGNED:%d\n",segment_size*segment_size);
-	printf("SEGMENTATION       TOTAL:%d\n",counter);
-	printf("SEGMENT PIXEL   ASSIGNED:%f\n",(segment_size*seglength_x)*(segment_size*seglength_y));
-	printf("SEGMENT PIXEL      TOTAL:%d\n",pixel_c);
+	printf("SEGMENTATION ASSIGNED   :%d\n",segment_size*segment_size);
+	printf("SEGMENTATION TOTAL      :%d\n",counter);
+	printf("SEGMENT PIXEL ASSIGNED  :%f\n",(segment_size*seglength_x)*(segment_size*seglength_y));
+	printf("SEGMENT PIXEL TOTAL     :%d\n",pixel_c);
 
-	printf("SEGMENTATION    LENGTH X:%f\n",seglength_x);
-	printf("SEGMENTATION    LENGTH Y:%f\n",seglength_y);
-	printf("SEGMENTATION        AREA:%f\n",(seglength_x*seglength_y));
-	printf("R:%f\n",euclidean_dist(matrix_diff[0], segment_size*segment_size));
-	printf("G:%f\n",euclidean_dist(matrix_diff[1], segment_size*segment_size));
-	printf("B:%f\n",euclidean_dist(matrix_diff[2], segment_size*segment_size));
+	printf("SEGMENTATION LENGTH X   :%f\n",seglength_x);
+	printf("SEGMENTATION LENGTH Y   :%f\n",seglength_y);
+	printf("SEGMENTATION AREA       :%f\n",(seglength_x*seglength_y));
+	printf("R                       :%f\n",euclidean_dist(matrix_diff[0], segment_size*segment_size));
+	printf("G                       :%f\n",euclidean_dist(matrix_diff[1], segment_size*segment_size));
+	printf("B                       :%f\n",euclidean_dist(matrix_diff[2], segment_size*segment_size));
+	printf("CHANNEL DEVIATION       :%f\n",diff_avg);
+	printf("MIN POSSIBLE DISTANCE   :%f\n", min_diff/(segment_size*segment_size));
+	printf("MAX POSSIBLE DISTANCE   :%f\n", max_diff/(segment_size*segment_size));
+	*/
 
+	counter = 0;
+	double matrix_identifier[1][2];
+	for(seg_y = 0; seg_y < segment_size; seg_y++)
+	{
+		for(seg_x = 0; seg_x < segment_size; seg_x++)
+		{
+			for (i = seglength_y*seg_y; i < ((seglength_y)*(seg_y+1)); i++)
+			{
+				for (j = seglength_x*seg_x; j < ((seglength_x)*(seg_x+1)); j++)
+				{
+					for(c = 0;c < 3;c++)
+					{
+						//image_out[c][i][j] = segment_identifier;
+
+						matrix_identifier[0][0] = matrix_diff[c][counter][0];
+						matrix_identifier[0][1] = matrix_diff[c][counter][1];
+						image_out[c][i][j] = abs(image_a[c][i][j] - euclidean_dist(matrix_identifier, 1));
+					}
+				}
+			}
+			counter++;
+		}
+	}
+
+	//qsort(d[a], cnt_b, sizeof(double), sort);
+	//write_bmp_color(image_out, "SEGMENTATION_VISUAL.bmp");
 	//diff = euclidean_dist(matrix_diff, segment_size*segment_size);
-	return diff/3;
+	diffval[0] = min_diff/(segment_size*segment_size);
+	diffval[1] = max_diff/(segment_size*segment_size);
+	diffval[2] = diff/3;
+	return 0;
 }
 /*
 double general_distance(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned char image_b[3][Y_SIZE][X_SIZE])
