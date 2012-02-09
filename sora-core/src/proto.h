@@ -6,8 +6,11 @@
 int X_SIZE = 256;
 int Y_SIZE = 256;
 //DEBUG CONSTANT
-char *debug_a = "ux2.bmp";
-char *debug_b = "ux1.bmp";
+char *debug_a = "lena.bmp";
+char *debug_b = "lena_paint.bmp";
+//lena_paint
+//lena_mirror
+//lena_colour
 
 
 //STANDARD FUNCTION
@@ -119,7 +122,7 @@ void thresh_ysh(int image_in_ysh[3][Y_SIZE][X_SIZE], unsigned char image_out[Y_S
 /*
  * FEATURE
  */
-int sort(const void *x, const void *y);
+int cmp(const void *x, const void *y);
 
 double calc_distance(unsigned char image_label_a[Y_SIZE][X_SIZE],
 	unsigned char image_label_b[Y_SIZE][X_SIZE],
@@ -161,7 +164,9 @@ void label_masking(unsigned char image_lable[Y_SIZE][X_SIZE], unsigned char imag
 void labelset(unsigned char image[Y_SIZE][X_SIZE], int xs, int ys, int label);
 
 
-double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned char image_b[3][Y_SIZE][X_SIZE], int segment_size);
+double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned char image_b[3][Y_SIZE][X_SIZE], int segment_size, int mode, double diffval[]);
+double general_distance(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned char image_b[3][Y_SIZE][X_SIZE]);
+void print_image(unsigned char image[3][Y_SIZE][X_SIZE],int channel);
 
 /*
  * FEATURE END
