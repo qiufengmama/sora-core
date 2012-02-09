@@ -370,7 +370,7 @@ assign(image_general[1][2], image_test[1][2]);// <-
 
 //print_image(image_general[0], 1);
 double diff_seg[3];
-general_segmentation(image_test[0], image_test[1], 16, 1, diff_seg);
+general_segmentation(image_test[0], image_test[1], 8, 1, diff_seg);
 
 //print_image(image_general[0],0);
 //double diff_general = general_distance(image_general[0], image_general[1]);
@@ -631,7 +631,7 @@ printf("PIXEL DIFFER: %d,\n", c_false);
 printf("%f", diff_seg[2]);
 if(debug == 1)
 {
-write_bmp_color(image_out, path_fft_x);
+	write_bmp_color(image_out, path_fft_x);
 
 
 //printf("\nGENERAL      DISTANCE: %f\n", diff_general);
@@ -2358,7 +2358,13 @@ double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned ch
 	double seglength_x = segment_x.quot;
 	double seglength_y = segment_y.quot;
 	double search_matrix[3][segment_size*segment_size][segment_size*segment_size];
+	double link_matrix[2][3][segment_size*segment_size][segment_size*segment_size];
 	double search_identifier[3][1][2];
+	double ratio_matrix[3][segment_size*segment_size][segment_size*segment_size];
+	double ratio_identifier[3][segment_size*segment_size];
+	double ratio_unity[3][segment_size*segment_size];
+	double ratio_deviation[3];
+	double ratio_average[3];
 
 
 	//int segemnt = Y_SIZE/segment_size;
@@ -2431,6 +2437,10 @@ double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned ch
 				search_identifier[c][0][0] = matrix_diff[c][du][0];
 				search_identifier[c][0][1] = matrix_diff[c][di][1];
 				search_matrix[c][du][di] = euclidean_dist(search_identifier[c], 1);
+				//self relevance comparison, ex: |A-B|, |A-C| .....
+				link_matrix[0][c][du][di] = fabs(matrix_diff[c][du][0] - matrix_diff[c][di][0]);
+				link_matrix[1][c][du][di] = fabs(matrix_diff[c][du][1] - matrix_diff[c][di][1]);
+
 				//printf("C%d,A%d:B%d[%f];",c,du,di,search_matrix[c][du][di]);
 			}
 			//printf("\n");
@@ -2441,6 +2451,46 @@ double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned ch
 			qsort(search_matrix[c][du], sizeof(search_matrix[c][du])/sizeof(search_matrix[c][du][0]), sizeof(search_matrix[c][du][0]), cmp);
 
 	}
+
+	for(du = 0; du < segment_size*segment_size; du++)
+	{
+		for(di = 0; di < segment_size*segment_size; di++)
+		{
+			for(c = 0;c < 3;c++)
+			{
+				//self & other ratio......
+				//link_matrix[0][c][du][di];
+				//link_matrix[1][c][du][di];
+				if((link_matrix[0][c][du][di] != (double)0) || (link_matrix[0][c][du][di] != (double)0))
+				{
+					//printf("C%d,Ri:%f; =>[%f][%f] \n",c, ratio_matrix[c][du][di],link_matrix[0][c][du][di],link_matrix[1][c][du][di]);
+					ratio_matrix[c][du][di] = (fmin(link_matrix[0][c][du][di], link_matrix[1][c][du][di])/fmax(link_matrix[0][c][du][di], link_matrix[1][c][du][di]));
+					ratio_identifier[c][du]  += (fmin(link_matrix[0][c][du][di], link_matrix[1][c][du][di])/fmax(link_matrix[0][c][du][di], link_matrix[1][c][du][di]));
+				}
+			}
+		}
+		for(c = 0;c < 3;c++)
+		{
+			ratio_unity[c][du]  = ratio_identifier[c][du]/((segment_size*segment_size)-1);
+			//printf("C%d,Ru:%f;\n",c, ratio_identifier[c][du]);
+			//printf("C%d,Ra:%f;\n",c, ratio_unity[c][du]);
+			//ratio_deviation[c][du] /= (segment_size*segment_size);
+			//ratio_deviation[c][du]
+
+		}
+	}
+	for(c = 0;c < 3;c++)
+	{
+		ratio_deviation[c] = stat_stddev(ratio_unity[c], (segment_size*segment_size));
+		printf("C%d,RD:%f,",c, ratio_deviation[c]);
+		ratio_average[c] = stat_avg(ratio_unity[c], (segment_size*segment_size));
+		printf("RA:%f;\n", ratio_average[c]);
+	}
+
+
+
+
+
 
 	for(i = 0; i < segment_size*segment_size; i++)
 	{
