@@ -2415,12 +2415,24 @@ double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned ch
 
 	//advance position_neighbor part
     int array_size = (segment_size*segment_size);
-    t_array_index *position_neighbor;
+    t_array_index **position_neighbor;
     position_neighbor = (t_array_index *) malloc(sizeof(t_array_index) * array_size);
     for (i = 0; i < segment_size*segment_size; i++)
     {
     	position_neighbor[i] = (t_array_index *) malloc(sizeof(t_array_index) * array_size);
     }
+    int neighbor_range = 4;
+    double neighbor_coefficient_matrix[segment_size*segment_size][segment_size*segment_size][neighbor_range];
+    double neighbor_coefficient_deviation[segment_size*segment_size][segment_size*segment_size];
+    //double neighbor_coefficient_average[segment_size*segment_size][segment_size*segment_size][neighbor_range];
+
+
+	int neighbor_dimension[] = {-1, 1, -(seglength_x*seglength_y), (seglength_x*seglength_y)};
+	//could be (n=1)8, (n=2)24-> 8+(8*2)....or even a circle...
+	//this one is +1 expansion in x and y dimension only,thus, 4
+
+
+
     //
 
 
@@ -2522,16 +2534,21 @@ double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned ch
 	//advance search!
 	for(du = 0; du < segment_size*segment_size; du++)
 	{
+		//neighbor_matrix[du] = ;
+
 		for(di = (segment_size*segment_size)-1; di >= 0; di--)
 		{
 			search_matrix[c][du];
-			fabs(matrix_diff[c][position_neighbor[du][di].index][0]-matrix_diff[c][position_neighbor[du][di].index][1]);
-
-
-
-
-
-
+			//segment neighbor loop
+			for(i = 0; i < neighbor_range; i++)
+			{
+				neighbor_coefficient_matrix[du][di][i] = fabs( matrix_diff[c][position_neighbor[du][di].index+neighbor_dimension[i]][0] - matrix_diff[c][position_neighbor[du][di].index+neighbor_dimension[i]][1] );
+				/*
+				neighbor_coefficient[i] = fmin(matrix_diff[c][position_neighbor[du][di].index+neighbor_dimension[i]][0], matrix_diff[c][position_neighbor[du][di].index+neighbor_dimension[i]][1])/
+						fmin(matrix_diff[c][position_neighbor[du][di].index+neighbor_dimension[i]][0], matrix_diff[c][position_neighbor[du][di].index+neighbor_dimension[i]][1]);
+				*/
+			}
+			neighbor_coefficient_deviation[du][di] = stat_stddev(neighbor_coefficient_matrix[du][di], neighbor_range);
 
 
 		}
