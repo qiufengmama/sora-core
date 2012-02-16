@@ -369,8 +369,8 @@ assign(image_general[1][1], image_test[1][1]);// <-
 assign(image_general[1][2], image_test[1][2]);// <-
 
 //print_image(image_general[0], 1);
-double diff_seg[3];
-general_segmentation(image_test[0], image_test[1], 4, 1, 10, diff_seg);
+double diff_seg[3][3];
+general_segmentation(image_test[0], image_test[1], 8, 1, 8, diff_seg);
 
 //print_image(image_general[0],0);
 //double diff_general = general_distance(image_general[0], image_general[1]);
@@ -418,10 +418,12 @@ if(write_bmp_mono(image_buffer[1], path_thr_b) != -1)
 	{debug("THR B OK!");}
 else
 {debug("THR FAIL!");}
-}
 
 write_bmp_color(image_test[0], path_src_a);
 write_bmp_color(image_test[1], path_src_b);
+}
+
+
 
 //FINISH THE FEATURE DETECTION HERE.......
 
@@ -628,15 +630,57 @@ printf("PIXEL SIMILAR: %d,\n", c_true);
 printf("PIXEL DIFFER: %d,\n", c_false);
 */
 
-printf("%f", diff_seg[2]);
+int c;
+double deviation_unity;
+for(c = 0;c < 3;c++)
+{
+	deviation_unity += diff_seg[1][c];
+	//printf("D%d = %f\n",c,diff_seg[1][c]);
+}
+
+deviation_unity/=3;
+
+double average_unity;
+for(c = 0;c < 3;c++)
+{
+	average_unity += diff_seg[2][c];
+	//printf("A%d = %f\n",c,diff_seg[2][c]);
+}
+
+average_unity/=3;
+
+
+//printf("%f", diff_seg[0][2]);
+/*
+printf("Ua:%f;\n", average_unity);
+printf("Ud:%f;\n", deviation_unity);
+*/
+
+
+if(deviation_unity != (double)0)
+{
+	//printf(";Df:%f", average_unity/deviation_unity);
+	//printf(";C:%f;\n", (average_unity/deviation_unity));
+	//printf(";Oc:%f;", (average_unity/deviation_unity)*diff_seg[0][2]);
+
+	printf("%f", (average_unity/deviation_unity)*diff_seg[0][2]);
+}
+else
+{
+	printf(";Df:0");
+	printf(";Oc:%f", (average_unity*deviation_unity)*diff_seg[0][2]);
+}
+
+
+
 if(debug == 1)
 {
 	write_bmp_color(image_out, path_fft_x);
 
 
 //printf("\nGENERAL      DISTANCE: %f\n", diff_general);
-printf("\nSmax: %f\n", diff_seg[0]);
-printf("Smin: %f\n", diff_seg[1]);
+//printf("\nSmax: %f\n", diff_seg[0]);
+//printf("Smin: %f\n", diff_seg[1]);
 //printf("\nSEGMENTATION DISTANCE: %f\n", diff_seg[2]);
 //printf("\nET: %fs\n", ((double)clock() - start) / CLOCKS_PER_SEC);
 
@@ -2025,10 +2069,21 @@ double calc_size(unsigned char image_label[Y_SIZE][X_SIZE],
 int cmp(const void *x, const void *y)
 {
 	double xx = *(double*)x, yy = *(double*)y;
-	  if (xx > yy) return -1;
-	  if (xx < yy) return 1;
-	  return 0;
+	if (xx > yy) return -1;
+	if (xx < yy) return 1;
+	return 0;
 }
+
+int cmp_struct(const void *x, const void *y)
+{
+    t_array_index *struct_x = (t_array_index *) x;
+    t_array_index *struct_y = (t_array_index *) y;
+	if (struct_x->value > struct_y->value) return -1;
+	if (struct_x->value < struct_y->value) return 1;
+	return 0;
+}
+
+
 double stat_stddev(double stat[], int stat_count)
 {
 	int	i;
@@ -2046,7 +2101,7 @@ double stat_stddev(double stat[], int stat_count)
 double stat_avg(double stat[], int stat_count)
 {
 	int	i;
-	double avg_c = (double)0;
+	double avg_c = 0;
 	for(i = 0; i < stat_count; i++)
 		avg_c = avg_c + stat[i];
 	if(stat_count != 0)
@@ -2324,7 +2379,7 @@ void features_structure(unsigned char label_in[Y_SIZE][X_SIZE], double distance[
 		}
 }
 
-double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned char image_b[3][Y_SIZE][X_SIZE], int segment_size, int mode, int border, double diffval[])
+double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned char image_b[3][Y_SIZE][X_SIZE], int segment_size, int mode, int border, double diffval[3][3])
 {
 	int i, j;
 	int c;
@@ -2357,6 +2412,16 @@ double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned ch
 	if((border*2 >= seglength_x) || (border*2 >= seglength_y))
 		border = (int)((int)fmin(seglength_x,seglength_y)-1)/2;
 
+
+	//advance position_neighbor part
+    int array_size = (segment_size*segment_size);
+    t_array_index *position_neighbor;
+    position_neighbor = (t_array_index *) malloc(sizeof(t_array_index) * array_size);
+    for (i = 0; i < segment_size*segment_size; i++)
+    {
+    	position_neighbor[i] = (t_array_index *) malloc(sizeof(t_array_index) * array_size);
+    }
+    //
 
 
 
@@ -2435,17 +2500,53 @@ double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned ch
 				link_matrix[0][c][du][di] = fabs(matrix_diff[c][du][0] - matrix_diff[c][di][0]);
 				link_matrix[1][c][du][di] = fabs(matrix_diff[c][du][1] - matrix_diff[c][di][1]);
 
+
+				position_neighbor[du][di].value = fabs(matrix_diff[c][du][0] - matrix_diff[c][di][1]);
+				position_neighbor[du][di].index = di;
+
 				//printf("C%d,A%d:B%d[%f];",c,du,di,search_matrix[c][du][di]);
 			}
 			//printf("\n");
-
 		}
 		//printf("}\n");
 		for(c = 0;c < 3;c++)
 			qsort(search_matrix[c][du], sizeof(search_matrix[c][du])/sizeof(search_matrix[c][du][0]), sizeof(search_matrix[c][du][0]), cmp);
 
+		//sort array index(struct index)
+		for(c = 0;c < 3;c++)
+			qsort(position_neighbor[du], array_size, sizeof(position_neighbor[du][0]), cmp_struct);
+
 	}
 
+
+	//advance search!
+	for(du = 0; du < segment_size*segment_size; du++)
+	{
+		for(di = (segment_size*segment_size)-1; di >= 0; di--)
+		{
+			search_matrix[c][du];
+			fabs(matrix_diff[c][position_neighbor[du][di].index][0]-matrix_diff[c][position_neighbor[du][di].index][1]);
+
+
+
+
+
+
+
+
+		}
+	}
+
+
+
+
+
+
+
+
+
+	//advance search!
+	counter = 0;
 	for(du = 0; du < segment_size*segment_size; du++)
 	{
 		for(di = 0; di < segment_size*segment_size; di++)
@@ -2459,18 +2560,22 @@ double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned ch
 				{
 					//printf("C%d,Ri:%f; =>[%f][%f] \n",c, ratio_matrix[c][du][di],link_matrix[0][c][du][di],link_matrix[1][c][du][di]);
 					ratio_matrix[c][du][di] = (fmin(link_matrix[0][c][du][di], link_matrix[1][c][du][di])/fmax(link_matrix[0][c][du][di], link_matrix[1][c][du][di]));
-					if(du == (double)0)
+					//if(du == (double)0)
 						ratio_identifier[c][du] = (double)1;
+
 					ratio_identifier[c][du]  *= (fmin(link_matrix[0][c][du][di], link_matrix[1][c][du][di])/fmax(link_matrix[0][c][du][di], link_matrix[1][c][du][di]));
+					counter++;
+					//printf("C%d;du[%d] =>r[%f] \n",c, du,(fmin(link_matrix[0][c][du][di], link_matrix[1][c][du][di])/fmax(link_matrix[0][c][du][di], link_matrix[1][c][du][di])));
 				}
 			}
 		}
 		for(c = 0;c < 3;c++)
 		{
 			//ratio_unity[c][du]  = ratio_identifier[c][du]/((segment_size*segment_size)-1);
-			if(ratio_identifier[c][du] == (double)1)
-				ratio_identifier[c][du] = 0;
+			//if(ratio_identifier[c][du] == (double)1)
+				//ratio_identifier[c][du] = 0;
 			ratio_unity[c][du]  = ratio_identifier[c][du];
+			//printf("!C%d;du[%d] =>r[%f] \n",c, du,ratio_identifier[c][du]);
 			//printf("C%d,Ru:%f;\n",c, ratio_identifier[c][du]);
 			//printf("C%d,Ra:%f;\n",c, ratio_unity[c][du]);
 			//ratio_deviation[c][du] /= (segment_size*segment_size);
@@ -2481,12 +2586,12 @@ double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned ch
 	for(c = 0;c < 3;c++)
 	{
 		ratio_deviation[c] = stat_stddev(ratio_unity[c], (segment_size*segment_size));
-		printf("C%d,Rd:%f,",c, ratio_deviation[c]);
-		ratio_average[c] = stat_avg(ratio_unity[c], (segment_size*segment_size)-1);
-		printf("Ra:%f;\n", ratio_average[c]);
+		//printf("C%d,Rd:%f,",c, ratio_deviation[c]);
+		ratio_average[c] = stat_avg(ratio_unity[c], (segment_size*segment_size));
+		//printf("Ra:%f;\n", ratio_average[c]);
 		//printf("Ro:%f;\n", ratio_average[c]);
 	}
-
+	//printf("Count:%d;\n",counter);
 
 
 
@@ -2563,9 +2668,19 @@ double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned ch
 	//qsort(d[a], cnt_b, sizeof(double), sort);
 	//write_bmp_color(image_out, "SEGMENTATION_VISUAL.bmp");
 	//diff = euclidean_dist(matrix_diff, segment_size*segment_size);
-	diffval[0] = min_diff/(segment_size*segment_size);
-	diffval[1] = max_diff/(segment_size*segment_size);
-	diffval[2] = diff/3;
+	diffval[0][0] = min_diff/(segment_size*segment_size);
+	diffval[0][1] = max_diff/(segment_size*segment_size);
+	diffval[0][2] = diff/3;
+
+	for(c = 0;c < 3;c++)
+		diffval[1][c] = ratio_average[c];
+	for(c = 0;c < 3;c++)
+		diffval[2][c] = ratio_deviation[c];
+
+
+
+
+	//diffval[1][1] = ratio_deviation;
 	return 0;
 }
 /*
