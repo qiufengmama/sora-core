@@ -7,11 +7,24 @@ int X_SIZE = 256;
 int Y_SIZE = 256;
 //DEBUG CONSTANT
 char *debug_a = "lena.bmp";
-char *debug_b = "lena.bmp";
+char *debug_b = "miyako.bmp";
 //lena_paint
 //lena_mirror
 //lena_colour
+//TYPE DEFINITION
 
+//array with index
+typedef struct _array_index
+{
+    float value;
+    int index;
+} t_array_index;
+
+
+
+
+
+//TYPE DEFINITION END
 
 //STANDARD FUNCTION
 
@@ -123,6 +136,7 @@ void thresh_ysh(int image_in_ysh[3][Y_SIZE][X_SIZE], unsigned char image_out[Y_S
  * FEATURE
  */
 int cmp(const void *x, const void *y);
+int cmp_struct(const void *x, const void *y);
 
 double calc_distance(unsigned char image_label_a[Y_SIZE][X_SIZE],
 	unsigned char image_label_b[Y_SIZE][X_SIZE],
@@ -164,7 +178,7 @@ void label_masking(unsigned char image_lable[Y_SIZE][X_SIZE], unsigned char imag
 void labelset(unsigned char image[Y_SIZE][X_SIZE], int xs, int ys, int label);
 
 
-double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned char image_b[3][Y_SIZE][X_SIZE], int segment_size, int mode, int border, double diffval[]);
+double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned char image_b[3][Y_SIZE][X_SIZE], int segment_size, int mode, int border, double diffval[3][3]);
 double general_distance(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned char image_b[3][Y_SIZE][X_SIZE]);
 void print_image(unsigned char image[3][Y_SIZE][X_SIZE],int channel);
 
