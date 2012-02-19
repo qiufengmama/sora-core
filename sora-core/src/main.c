@@ -369,7 +369,7 @@ assign(image_general[1][1], image_test[1][1]);// <-
 assign(image_general[1][2], image_test[1][2]);// <-
 
 //print_image(image_general[0], 1);
-double diff_seg[3][3];
+double diff_seg[4][3];
 general_segmentation(image_test[0], image_test[1], 8, 1, 8, diff_seg);
 
 //print_image(image_general[0],0);
@@ -663,7 +663,9 @@ if(deviation_unity != (double)0)
 	//printf(";C:%f;\n", (average_unity/deviation_unity));
 	//printf(";Oc:%f;", (average_unity/deviation_unity)*diff_seg[0][2]);
 
-	printf("%f", (average_unity/deviation_unity)*diff_seg[0][2]);
+	//printf("%f", ((average_unity/deviation_unity)*diff_seg[0][2])*diff_seg[4][0]);
+	printf("%f", ((average_unity/deviation_unity)*diff_seg[0][2]));
+	//printf("%f", diff_seg[4][0]);
 }
 else
 {
@@ -2379,10 +2381,11 @@ void features_structure(unsigned char label_in[Y_SIZE][X_SIZE], double distance[
 		}
 }
 
-double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned char image_b[3][Y_SIZE][X_SIZE], int segment_size, int mode, int border, double diffval[3][3])
+double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned char image_b[3][Y_SIZE][X_SIZE], int segment_size, int mode, int border, double diffval[4][3])
 {
 	int i, j;
 	int c;
+	int array_size = segment_size*segment_size;
 	//double d;
 	div_t segment_y = div(Y_SIZE, segment_size);
 	//segment_y;
@@ -2397,37 +2400,56 @@ double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned ch
 	static double max_diff;
 	unsigned char image_out[3][Y_SIZE][X_SIZE];
 	//int segment_area = ((segment_x.quot)*(segment_y.quot));
-	double matrix_diff[3][segment_size*segment_size][2];
+	double matrix_diff[3][array_size][2];
 	//double matrix_diff[3][segment_size*segment_size][2];
 	double seglength_x = segment_x.quot;
 	double seglength_y = segment_y.quot;
-	double search_matrix[3][segment_size*segment_size][segment_size*segment_size];
-	double link_matrix[2][3][segment_size*segment_size][segment_size*segment_size];
+	double search_matrix[3][array_size][array_size];
+	double link_matrix[2][3][array_size][array_size];
 	double search_identifier[3][1][2];
-	double ratio_matrix[3][segment_size*segment_size][segment_size*segment_size];
-	double ratio_identifier[3][segment_size*segment_size];
-	double ratio_unity[3][segment_size*segment_size];
+	double ratio_matrix[3][array_size][array_size];
+	double ratio_identifier[3][array_size];
+	double ratio_unity[3][array_size];
 	double ratio_deviation[3];
 	double ratio_average[3];
 	if((border*2 >= seglength_x) || (border*2 >= seglength_y))
-		border = (int)((int)fmin(seglength_x,seglength_y)-1)/2;
+		border = (int)(fmin(seglength_x,seglength_y)-1)/2;
 
 
 	//advance position_neighbor part
-    int array_size = (segment_size*segment_size);
+    //int array_size = segment_size*segment_size;
     t_array_index **position_neighbor;
-    position_neighbor = (t_array_index *) malloc(sizeof(t_array_index) * array_size);
-    for (i = 0; i < segment_size*segment_size; i++)
+    position_neighbor = (t_array_index **) malloc(sizeof(t_array_index) * array_size);
+    for (i = 0; i < array_size; i++)
     {
     	position_neighbor[i] = (t_array_index *) malloc(sizeof(t_array_index) * array_size);
     }
-    int neighbor_range = 4;
-    double neighbor_coefficient_matrix[segment_size*segment_size][segment_size*segment_size][neighbor_range];
-    double neighbor_coefficient_deviation[segment_size*segment_size][segment_size*segment_size];
+    int neighbor_range = 12;
+    double neighbor_coefficient_matrix[array_size][array_size][neighbor_range];
+
+    t_array_index **neighbor_coefficient_deviation;
+    neighbor_coefficient_deviation = (t_array_index **) malloc(sizeof(t_array_index) * array_size);
+    for (i = 0; i < array_size; i++)
+    {
+    	neighbor_coefficient_deviation[i] = (t_array_index *) malloc(sizeof(t_array_index) * array_size);
+    }
+
+    //double neighbor_coefficient_deviation[array_size][array_size];
+    double segment_coefficient_deviation[array_size];
     //double neighbor_coefficient_average[segment_size*segment_size][segment_size*segment_size][neighbor_range];
 
 
-	int neighbor_dimension[] = {-1, 1, -(seglength_x*seglength_y), (seglength_x*seglength_y)};
+	int neighbor_dimension[] = {-1, 1,
+
+			(-(segment_size)), (segment_size),
+
+			(-(segment_size-1)), (segment_size+1),
+
+			(-(segment_size+1)), (segment_size-1),
+
+			(-(segment_size*2)), (segment_size*2),
+
+			-2, 2};
 	//could be (n=1)8, (n=2)24-> 8+(8*2)....or even a circle...
 	//this one is +1 expansion in x and y dimension only,thus, 4
 
@@ -2529,30 +2551,67 @@ double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned ch
 			qsort(position_neighbor[du], array_size, sizeof(position_neighbor[du][0]), cmp_struct);
 
 	}
+	for(du = 0; du < segment_size*segment_size; du++)
+	{
+		for(di = (segment_size*segment_size)-1; di >= 0; di--)
+		{
+			//neighbor_coefficient_deviation[du][di] = stat_stddev(neighbor_coefficient_matrix[du][di], neighbor_range);
+			//printf("LIST ARRAY -> %d => %f\n", position_neighbor[du][di].index, position_neighbor[du][di].value);
+		}
+	}
 
-
+	counter = 0;
 	//advance search!
+	/*
+	for(du = 0; du < segment_size*segment_size; du++)
+	{
+		//matrix_diff[c][du][0]
+
+	}
+	*/
+	c = 1;
 	for(du = 0; du < segment_size*segment_size; du++)
 	{
 		//neighbor_matrix[du] = ;
 
 		for(di = (segment_size*segment_size)-1; di >= 0; di--)
 		{
-			search_matrix[c][du];
+			//search_matrix[c][du];
 			//segment neighbor loop
 			for(i = 0; i < neighbor_range; i++)
 			{
-				neighbor_coefficient_matrix[du][di][i] = fabs( matrix_diff[c][position_neighbor[du][di].index+neighbor_dimension[i]][0] - matrix_diff[c][position_neighbor[du][di].index+neighbor_dimension[i]][1] );
+				neighbor_coefficient_matrix[du][di][i] = fabs( matrix_diff[c][counter+neighbor_dimension[i]][0] - matrix_diff[c][position_neighbor[du][di].index + neighbor_dimension[i]][1] );
 				/*
 				neighbor_coefficient[i] = fmin(matrix_diff[c][position_neighbor[du][di].index+neighbor_dimension[i]][0], matrix_diff[c][position_neighbor[du][di].index+neighbor_dimension[i]][1])/
 						fmin(matrix_diff[c][position_neighbor[du][di].index+neighbor_dimension[i]][0], matrix_diff[c][position_neighbor[du][di].index+neighbor_dimension[i]][1]);
+
+				printf("[%d] -> abs(%f-%f)=%f; POS00:%d POS01:%d \n", i, matrix_diff[c][position_neighbor[du][di].index + neighbor_dimension[i]][0], matrix_diff[c][position_neighbor[du][di].index + neighbor_dimension[i]][1],
+						neighbor_coefficient_matrix[du][di][i], counter+neighbor_dimension[i],position_neighbor[du][di].index + neighbor_dimension[i] );
 				*/
 			}
-			neighbor_coefficient_deviation[du][di] = stat_stddev(neighbor_coefficient_matrix[du][di], neighbor_range);
+			neighbor_coefficient_deviation[du][di].value = stat_stddev(neighbor_coefficient_matrix[du][di], neighbor_range);
+			neighbor_coefficient_deviation[du][di].index = du;
+			//if(neighbor_coefficient_deviation[du][(segment_size*segment_size)-1] == (double)0)
+				//printf("ADVANCE SEARCH:[%d(%d)][%d] -> %f\n", du, position_neighbor[du][di].index+neighbor_dimension[i], di, neighbor_coefficient_deviation[du][di]);
+
+			//qsort(position_neighbor[du], array_size, sizeof(position_neighbor[du][0]), cmp_struct);
+
+			//segment_coefficient_deviation[du] = neighbor_coefficient_deviation[du][(segment_size*segment_size)-1].value;
+
+			//printf("ADVANCE SEARCH:[%d(%d)][%d] -> %f\n", du, position_neighbor[du][di].index+neighbor_dimension[i], di, neighbor_coefficient_deviation[du][di].value);
 
 
 		}
+		counter++;
+		//TODO SORT NEIGHBOR ARRAY HERE WITH QSORT: THE ORIGINAL DATA FROM ONE TO ONE MIGHT LOST ACCURACY...
+		qsort(neighbor_coefficient_deviation[du], array_size, sizeof(neighbor_coefficient_deviation[du][0]), cmp_struct);
+		//printf("COEFFICIENT PEAK:%f\n",neighbor_coefficient_deviation[du][(segment_size*segment_size)-1].value);
+		segment_coefficient_deviation[du] = neighbor_coefficient_deviation[du][(segment_size*segment_size)-1].value;
+
 	}
+
+	//printf("SEGMENT COEFFICIENT:%f\n",stat_stddev(segment_coefficient_deviation, segment_size*segment_size));
+
 
 
 
@@ -2660,6 +2719,7 @@ double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned ch
 
 	counter = 0;
 	double matrix_identifier[1][2];
+	/*
 	for(seg_y = 0; seg_y < segment_size; seg_y++)
 	{
 		for(seg_x = 0; seg_x < segment_size; seg_x++)
@@ -2681,6 +2741,7 @@ double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned ch
 			counter++;
 		}
 	}
+	*/
 
 	//qsort(d[a], cnt_b, sizeof(double), sort);
 	//write_bmp_color(image_out, "SEGMENTATION_VISUAL.bmp");
@@ -2694,8 +2755,11 @@ double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned ch
 	for(c = 0;c < 3;c++)
 		diffval[2][c] = ratio_deviation[c];
 
+	diffval[4][0] = stat_stddev(segment_coefficient_deviation, segment_size*segment_size);
 
 
+	free(position_neighbor);
+	free(neighbor_coefficient_deviation);
 
 	//diffval[1][1] = ratio_deviation;
 	return 0;

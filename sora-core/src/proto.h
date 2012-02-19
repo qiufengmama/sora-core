@@ -7,7 +7,7 @@ int X_SIZE = 256;
 int Y_SIZE = 256;
 //DEBUG CONSTANT
 char *debug_a = "lena.bmp";
-char *debug_b = "miyako.bmp";
+char *debug_b = "lena.bmp";
 //lena_paint
 //lena_mirror
 //lena_colour
@@ -16,7 +16,7 @@ char *debug_b = "miyako.bmp";
 //array with index
 typedef struct _array_index
 {
-    float value;
+    double value;
     int index;
 } t_array_index;
 
@@ -178,7 +178,7 @@ void label_masking(unsigned char image_lable[Y_SIZE][X_SIZE], unsigned char imag
 void labelset(unsigned char image[Y_SIZE][X_SIZE], int xs, int ys, int label);
 
 
-double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned char image_b[3][Y_SIZE][X_SIZE], int segment_size, int mode, int border, double diffval[3][3]);
+double general_segmentation(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned char image_b[3][Y_SIZE][X_SIZE], int segment_size, int mode, int border, double diffval[4][3]);
 double general_distance(unsigned char image_a[3][Y_SIZE][X_SIZE],unsigned char image_b[3][Y_SIZE][X_SIZE]);
 void print_image(unsigned char image[3][Y_SIZE][X_SIZE],int channel);
 
