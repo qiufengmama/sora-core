@@ -7,7 +7,7 @@ int X_SIZE = 256;
 int Y_SIZE = 256;
 //DEBUG CONSTANT
 char *debug_a = "lena.bmp";
-char *debug_b = "lena.bmp";
+char *debug_b = "lena_paint.bmp";
 //lena_paint
 //lena_mirror
 //lena_colour
@@ -20,6 +20,13 @@ typedef struct _array_index
     int index;
 } t_array_index;
 
+typedef struct _array_index_ext
+{
+    double value;
+    int index;
+    int index_assoc;
+} t_array_index_ext;
+
 
 
 
@@ -28,7 +35,7 @@ typedef struct _array_index
 
 //STANDARD FUNCTION
 
-
+void read_image(unsigned char image_out[2][3][Y_SIZE][X_SIZE], int lim);
 char *join(const char* s1, const char* s2);
 char *tochar(int var);
 //STANDARD FUNCTION END
@@ -48,7 +55,7 @@ double stat_avg(double stat[], int stat_count);
 
 //STANDARD DISTANCE DUNCTION
 
-double euclidean_dist(double array[Y_SIZE*X_SIZE][2], int count);
+double euclidean_dist(double array[][2], int count);
 //STANDARD DISTANCE FUNCTION END
 
 void affine(unsigned char image_in[Y_SIZE][X_SIZE], 
