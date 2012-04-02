@@ -7,7 +7,7 @@ int X_SIZE = 256;
 int Y_SIZE = 256;
 //DEBUG CONSTANT
 char *debug_a = "lena.bmp";
-char *debug_b = "lena_paint.bmp";
+char *debug_b = "miyako.bmp";
 //lena_paint
 //lena_mirror
 //lena_colour
@@ -106,7 +106,12 @@ int fft1(double a_rl[], double a_im[], int ex, int inv);
 int fft2 (double a_rl[Y_SIZE][X_SIZE], double a_im[Y_SIZE][X_SIZE], int inv);
 int fftfilter(unsigned char image_in[Y_SIZE][X_SIZE], unsigned char image_out[Y_SIZE][X_SIZE], int a, int b);
 int fftfilter_ff(unsigned char image_in[Y_SIZE][X_SIZE], unsigned char image_out[Y_SIZE][X_SIZE], int a, int b);
+
 int fftimage(unsigned char image_in[Y_SIZE][X_SIZE], unsigned char image_out[Y_SIZE][X_SIZE]);
+int fftimage_ff(unsigned char image_in[Y_SIZE][X_SIZE], unsigned char image_out[Y_SIZE][X_SIZE], int a, int b);
+
+int fftfeature_ff(unsigned char image_a[Y_SIZE][X_SIZE], unsigned char image_b[Y_SIZE][X_SIZE], unsigned char image_out[Y_SIZE][X_SIZE], int a, int b);
+
 void fft1core(double a_rl[], double a_im[], int length, int ex, double sin_tbl[], double cos_tbl[], double buf[]);
 void cstb(int length, int inv, double sin_tbl[], double cos_tbl[]);
 void rvmtx1(double a[Y_SIZE][X_SIZE], double b[X_SIZE][Y_SIZE], int xsize, int ysize);
