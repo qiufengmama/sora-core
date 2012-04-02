@@ -10,6 +10,7 @@
 #include "params.h"
 #include "proto.h"
 #include "image.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -88,8 +89,8 @@ int main(int argc, char *argv[]) {
  * VAR DEFINE
  */
 	//LISTING DEFAULT
-	int threshold_rgb = 90; //90?
-	int threshold_ysh = 90; //90?
+	int threshold_rgb = 128; //90?
+	int threshold_ysh = 128; //90?
 	double threshold_ff = 0.3; // *100 // OPTIMAL 0.3?
 	int lim = (Y_SIZE+X_SIZE)/2;
 	int a = 0;  //OPTIMAL 0!
@@ -103,10 +104,12 @@ int main(int argc, char *argv[]) {
 	char *path_fft_a = join(join(join(CORE_CODE_NAME, "_FFT_A_"), tochar(TIME)), ".bmp");
 	char *path_fft_b = join(join(join(CORE_CODE_NAME, "_FFT_B_"), tochar(TIME)), ".bmp");
 	char *path_fft_x = join(join(join(CORE_CODE_NAME, "_FFT_X_"), tochar(TIME)), ".bmp");
+	char *path_fft_m = join(join(join(CORE_CODE_NAME, "_FFT_M_"), tochar(TIME)), ".bmp");
 
 	char *path_ff_a = join(join(join(CORE_CODE_NAME, "_FF_A_"), tochar(TIME)), ".bmp");
 	char *path_ff_b = join(join(join(CORE_CODE_NAME, "_FF_B_"), tochar(TIME)), ".bmp");
 	char *path_ff_x = join(join(join(CORE_CODE_NAME, "_FF_X_"), tochar(TIME)), ".bmp");
+
 
 	char *path_thr_a = join(join(join(CORE_CODE_NAME, "_THR_A_"), tochar(TIME)), ".bmp");
 	char *path_thr_b = join(join(join(CORE_CODE_NAME, "_THR_B_"), tochar(TIME)), ".bmp");
@@ -524,6 +527,28 @@ write_bmp_color(image_sub[1], path_fft_b);
 }
 
 
+unsigned char image_fftm[3][Y_SIZE][X_SIZE];
+unsigned char image_fftr[3][Y_SIZE][X_SIZE];
+
+image_multiplication_color(image_sub[0], image_sub[1], image_fftm);
+
+/*
+fftimage_ff(image_fftm[0],image_fftr[0], 0, 0);
+fftimage_ff(image_fftm[1],image_fftr[1], 0, 0);
+fftimage_ff(image_fftm[2],image_fftr[2], 0, 0);
+*/
+
+fftimage_ff(image_sub[1][0],image_fftr[0], 0, 0);
+fftimage_ff(image_sub[1][1],image_fftr[1], 0, 0);
+fftimage_ff(image_sub[1][2],image_fftr[2], 0, 0);
+
+fftfeature_ff(image_test[0][0], image_test[1][0], image_fftr[0], a, b);
+fftfeature_ff(image_test[0][1], image_test[1][1], image_fftr[1], a, b);
+fftfeature_ff(image_test[0][2], image_test[1][2], image_fftr[2], a, b);
+
+
+write_bmp_color(image_fftr, path_fft_m);
+
 
 //if((WRITE_FFT0 != -1) && (WRITE_FFT1 != -1))
 //{//check FFT
@@ -819,6 +844,88 @@ void read_image(unsigned char image_out[2][3][Y_SIZE][X_SIZE], int lim)
 	}
 	free(c);
 }
+/*
+void sora_decode(ImageData *img, int lim)
+{
+	char *delim3 = "|";
+	char *delim2 = "#";
+	char *delim1 = ":";
+	char *rtn;
+	char *ptn;
+	char *btn;
+	char *rest;
+	char *xest;
+	char *yest;
+	int xi = 0;
+	int yi = 0;
+	int ii = 0;
+	int ci = 0;
+	long fslen = (((lim*lim)*3)*3+ ((lim*lim)*3)*3) *2+lim;
+	char *c = malloc(fslen); // allocate memory
+	unsigned char image_out[2][3][Y_SIZE][X_SIZE];
+
+	fgets(c, fslen, stdin);
+
+	if((c != NULL)&& !ferror(stdin))
+	{
+	btn = strtok_r(c, delim3,&yest);
+	while(btn != NULL)
+	{
+		ptn = strtok_r(btn, delim2,&xest);
+		while(ptn != NULL)
+			{
+				rtn = strtok_r(ptn, delim1,&rest);
+				while(rtn != NULL)
+				{
+					if(yi <= lim)
+					{
+						image_out[ii][ci][xi][yi] = atol(rtn);
+						//setPixel(img,xi,yi,Pixel *pix)
+						xi++;
+					}
+					if(xi >= lim)
+					{
+						yi++;
+						xi = 0;
+					}
+					rtn = strtok_r(NULL, delim1, &rest);
+				}
+				ptn = strtok_r(NULL, delim2, &xest);
+				ci++;
+				xi = 0;
+				yi = 0;
+			}
+			btn = strtok_r(NULL, delim3, &yest);
+			ii++;
+			xi = 0;
+			yi = 0;
+			ci = 0;
+		}
+		xi = 0;
+		yi = 0;
+		ci = 0;
+		ii = 0;
+	}
+
+	//def
+	int i;
+	Pixel *pix;
+
+	for(i = 0;i < 2;i++)
+	{
+		for(c = 0;c < 3;c++)
+		{
+
+		    pix->r=val;
+		    pix->g=val;
+		    pix->b=val;
+
+		}
+	}
+
+	free(c);
+}
+*/
 
 char *join(const char* s1, const char* s2)
 {
@@ -877,6 +984,7 @@ void convolute(unsigned char image_in[Y_SIZE][X_SIZE], unsigned char image_out[Y
 			+(image_in[i+1][j-1] * c)
 			+(image_in[i+1][j] * c)
 			+(image_in[i+1][j+1] * c); //row 3
+
 			if(centre >= 255)
 				centre = 255;
 			if(centre <= 0)
@@ -1392,6 +1500,7 @@ int fftfilter_ff(unsigned char image_in[Y_SIZE][X_SIZE],
 		}
 	}
 // START NEW SECTION
+//THIS SECTION IS TAKEN FROM
 //DECL
 	double norm, max;
 //DECL END
@@ -1447,6 +1556,201 @@ int fftfilter_ff(unsigned char image_in[Y_SIZE][X_SIZE],
 	free(ai);
 	free(ff);
 	return 0;
+}
+
+int fftimage_ff(unsigned char image_in[Y_SIZE][X_SIZE],
+	unsigned char image_out[Y_SIZE][X_SIZE], int a, int b)
+{
+	double *ar;
+	double *ai;
+	double *ff;
+	double data;
+	long i, j, circ;
+
+	ar = (double *)malloc((size_t)Y_SIZE*X_SIZE*sizeof(double));
+	ai = (double *)malloc((size_t)Y_SIZE*X_SIZE*sizeof(double));
+	ff = (double *)malloc((size_t)Y_SIZE*X_SIZE*sizeof(double));
+	if ((ar == NULL) || (ai == NULL) || (ff == NULL)) return -1;
+
+	for (i = 0; i < Y_SIZE; i++) {
+		for (j = 0; j < X_SIZE; j++) {
+			ar[X_SIZE*i + j] = (double)image_in[i][j];
+			ai[X_SIZE*i + j] = (double)image_in[i][j];
+		}
+	}
+
+
+	if (fft2((double (*)[X_SIZE])ar, (double (*)[X_SIZE])ai, -1) == -1)
+		return -1;
+
+	for (i = 0; i < Y_SIZE; i++) {
+		for (j = 0; j < X_SIZE; j++) {
+			data = ar[X_SIZE*i + j];
+			if (data > 255) data = 255;
+			if (data <   0) data = 0;
+			image_out[i][j] = (unsigned char)data;
+		}
+	}
+
+	free(ar);
+	free(ai);
+	free(ff);
+	return 0;
+}
+
+int fftfeature_ff(unsigned char image_a[Y_SIZE][X_SIZE],
+	unsigned char image_b[Y_SIZE][X_SIZE], unsigned char image_out[Y_SIZE][X_SIZE], int a, int b)
+{
+	double *ara;
+	double *aia;
+
+	double *arb;
+	double *aib;
+
+	double *ff;
+	double data;
+	long i, j, circ;
+
+	ara = (double *)malloc((size_t)Y_SIZE*X_SIZE*sizeof(double));
+	aia = (double *)malloc((size_t)Y_SIZE*X_SIZE*sizeof(double));
+
+	arb = (double *)malloc((size_t)Y_SIZE*X_SIZE*sizeof(double));
+	aib = (double *)malloc((size_t)Y_SIZE*X_SIZE*sizeof(double));
+
+
+	ff = (double *)malloc((size_t)Y_SIZE*X_SIZE*sizeof(double));
+	if ((ara == NULL) || (aia == NULL) || (ff == NULL)) return -1;
+	if ((arb == NULL) || (aib == NULL) || (ff == NULL)) return -1;
+
+
+
+	for (i = 0; i < Y_SIZE; i++) {
+		for (j = 0; j < X_SIZE; j++) {
+			ara[X_SIZE*i + j] = (double)image_a[i][j];
+			aia[X_SIZE*i + j] = 0.0;
+
+			arb[X_SIZE*i + j] = (double)image_b[i][j];
+			aib[X_SIZE*i + j] = 0.0;
+		}
+	}
+
+	if (fft2((double (*)[X_SIZE])ara, (double (*)[X_SIZE])aia, 1) == -1) return -1;
+	if (fft2((double (*)[X_SIZE])arb, (double (*)[X_SIZE])aib, 1) == -1) return -1;
+
+	for (i = 0; i < Y_SIZE; i++) {
+		for(j = 0; j < X_SIZE; j++) {
+			data = (double)((j-X_SIZE/2)*(j-X_SIZE/2)
+				+ (i-Y_SIZE/2)*(i-Y_SIZE/2));
+			circ = (long)sqrt(data);
+			if ((circ >= a) && (circ <= b))
+				ff[X_SIZE*i + j] = 1.0;
+			else
+				ff[X_SIZE*i + j] = 0.0;
+		}
+	}
+
+
+
+	double norm_a, norm_b, max_a, max_b;
+
+	for (i = 0; i < Y_SIZE; i++) {
+					for (j = 0; j < X_SIZE; j++) {
+						norm_a = ara[X_SIZE*i + j]*ara[X_SIZE*i + j]
+						     + aia[X_SIZE*i + j]*aia[X_SIZE*i + j];
+
+						norm_b = arb[X_SIZE*i + j]*arb[X_SIZE*i + j]
+							 + aib[X_SIZE*i + j]*aib[X_SIZE*i + j];
+
+
+						if (norm_a != 0.0) norm_a = log(norm_a) / 2.0;
+						else norm_a = 0.0;
+
+						if (norm_b != 0.0) norm_b = log(norm_b) / 2.0;
+						else norm_b = 0.0;
+
+						//ara[X_SIZE*i + j] = norm_a;
+						//arb[X_SIZE*i + j] = norm_b;
+
+
+						if (norm_a > max_a) max_a = norm_a;
+						if (norm_b > max_b) max_b = norm_b;
+					}
+				}
+
+	for (i = 0; i < Y_SIZE; i++) {
+		for (j = 0; j < X_SIZE; j++) {
+			/*
+			ara[X_SIZE*i + j] *= ff[X_SIZE*i + j];
+			aia[X_SIZE*i + j] *= ff[X_SIZE*i + j];
+
+			arb[X_SIZE*i + j] *= ff[X_SIZE*i + j];
+			aib[X_SIZE*i + j] *= ff[X_SIZE*i + j];
+			*/
+
+			ara[X_SIZE*i + j] = ara[X_SIZE*i + j] * arb[X_SIZE*i + j] /norm_b;
+			aia[X_SIZE*i + j] = aia[X_SIZE*i + j] * aib[X_SIZE*i + j] /norm_b;
+	}
+	}
+	/*
+	// START NEW SECTION
+	//THIS SECTION IS TAKEN FROM
+	//DECL
+
+	//DECL END
+
+		max = 0;
+			for (i = 0; i < Y_SIZE; i++) {
+				for (j = 0; j < X_SIZE; j++) {
+					norm = ara[X_SIZE*i + j]*ara[X_SIZE*i + j]
+					     + aia[X_SIZE*i + j]*aia[X_SIZE*i + j];
+					if (norm != 0.0) norm = log(norm) / 2.0;
+					else norm = 0.0;
+					ara[X_SIZE*i + j] = norm;
+					if (norm > max) max = norm;
+				}
+			}
+			for (i = 0; i < Y_SIZE; i++) {
+				for (j = 0; j < X_SIZE; j++) {
+					ara[X_SIZE*i + j] = ara[X_SIZE*i + j]*255 / max;
+				}
+			}
+
+			for (i = 0; i < Y_SIZE; i++) {
+				for (j = 0; j < X_SIZE; j++) {
+					data = ara[X_SIZE*i + j];
+					if (data > 255) data = 255;
+					if (data <   0) data = 0;
+					image_out[i][j] = (unsigned char)data;
+				}
+			}
+
+
+
+	// END NEW SECTION
+
+
+
+	 */
+
+
+		if (fft2((double (*)[X_SIZE])ara, (double (*)[X_SIZE])aia, -1) == -1)
+			return -1;
+
+		for (i = 0; i < Y_SIZE; i++) {
+			for (j = 0; j < X_SIZE; j++) {
+				data = ara[X_SIZE*i + j];
+				if (data > 255) data = 255;
+				if (data <   0) data = 0;
+				image_out[i][j] = (unsigned char)data;
+			}
+		}
+
+		free(ara);
+		free(aia);
+		free(arb);
+		free(aib);
+		free(ff);
+		return 0;
 }
 
 /*
@@ -3278,6 +3582,23 @@ int median_value(unsigned char c[9])
 	}
 	return c[4];
 }
+
+void image_multiplication_color(unsigned char image_in1[3][Y_SIZE][X_SIZE],
+	unsigned char image_in2[3][Y_SIZE][X_SIZE],
+	unsigned char image_out[3][Y_SIZE][X_SIZE])
+{
+	int	i, j, k;
+	double d;
+	for (i = 0; i < 3; i++) {
+		for (j = 0; j < Y_SIZE; j++) {
+			for (k = 0; k < X_SIZE; k++) {
+				d = (double)image_in1[i][j][k] * image_in2[i][j][k] / 255.0;
+				image_out[i][j][k] = (unsigned char)d;
+			}
+		}
+	}
+}
+
 
 /*
  * NOISE END
